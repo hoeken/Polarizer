@@ -177,7 +177,7 @@ class BoatPolar:
 			for tws in self.wind_speeds:
 				row = [tws]
 				for twa in self.wind_angles:
-					row.append([twa])
+					row.append(twa)
 					bsp = self.get_speed(twa, tws)
 					if bsp is not None:
 						row.append(bsp)

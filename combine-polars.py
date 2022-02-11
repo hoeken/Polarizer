@@ -88,7 +88,7 @@ def combine_polars():
 	legend.write_csv("polars/combined-polars-sailset.csv")
 	max_speed.write_csv("polars/combined-polars-speed.csv")
 	best_vmg.write_csv("polars/combined-polars-vmg.csv")
-	max_speed.write_predictwind("polars/combined-polars-predictwind.csv")
+	max_speed.write_predictwind("polars/combined-polars-predictwind.txt")
 	
 	#save our legend file.
 	fp = open("polars/combined-polars-legend.csv", 'w')
