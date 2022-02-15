@@ -1,7 +1,5 @@
 TODO:
 
-* try scipy filtering: https://docs.scipy.org/doc/scipy/reference/generated/scipy.signal.filtfilt.html#scipy.signal.filtfilt
-* add graphing of the raw/filtered data to compare how the output looks
-
+* output graphs to a graph directory instead of just displaying them
 * write an interpolation utility script to change from one set of polar ranges to another
 * data entry on VPPs from dutoit
