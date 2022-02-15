@@ -37,7 +37,6 @@ def main():
 	parser.add_argument('-f', '--file', action='store')
 	parser.add_argument('-d', '--dir', action='store')
 	parser.add_argument('-p', '--polar', action='store')
-	parser.add_argument('-g', '--graph', default=False, action='store_true')
 	parser.add_argument('--twa_min', action='store', default = 0, type=float)
 	parser.add_argument('--twa_max', action='store', default = 180, type=float)
 
@@ -56,12 +55,6 @@ def main():
 	bsp_list = []
 	wind_time = 0
 	bsp_time = 0
-	
-	#this is for graphing... probably a better way to do this.
-	tws_time = []
-	tws_data = []
-	tws_avg_time = []
-	tws_avg_data = []
 	
 	#did we get a single file?
 	if args.file:
@@ -100,6 +93,14 @@ def main():
 		
 	#loop through all our data files
 	for myfile in files:
+
+		#this is for graphing... probably a better way to do this.
+		tws_data = {}
+		tws_avg_data = {}
+		twa_data = {}
+		twa_avg_data = {}
+		bsp_data = {}
+		bsp_avg_data = {}
 
 		#open our file for reading
 		print("Parsing file {}".format(myfile))
@@ -151,6 +152,9 @@ def main():
 							micros = 0.0
 						unix_time += micros
 
+					#need this later
+					timestamp = datetime.datetime.fromtimestamp(unix_time)
+
 					#wind speed...
 					if 'tws' in output and 'twa' in output:
 						twa = float(output['twa'])
@@ -166,8 +170,8 @@ def main():
 						tws_list.append(tws)
 						wind_time = unix_time
 						
-						tws_time.append(datetime.datetime.fromtimestamp(unix_time))
-						tws_data.append(tws)
+						tws_data[timestamp] = tws
+						twa_data[timestamp] = twa
 							
 					#boat speed... use SOG
 					if use_sog:
@@ -175,11 +179,13 @@ def main():
 							bsp = float(output['sog'])
 							bsp_list.append(bsp)
 							bsp_time = unix_time
+							bsp_data[timestamp] = bsp
 					else:
 						if 'water_speed' in output and nmea.sentence == 'VHW' and output['water_speed']:
 							bsp = float(output['water_speed'])
 							bsp_list.append(bsp)
 							bsp_time = unix_time
+							bsp_data[timestamp] = bsp
 
 					#limit our running average arrays
 					while len(twa_list) > running_avg_count:
@@ -196,10 +202,11 @@ def main():
 						avg_tws = numpy.average(tws_list)
 						avg_bsp = numpy.average(bsp_list)
 						
-						tws_avg_time.append(datetime.datetime.fromtimestamp(wind_time))
-						tws_avg_data.append(round(avg_tws, 2))
+						tws_avg_data[timestamp] = round(avg_tws, 2)
+						twa_avg_data[timestamp] = round(avg_twa, 2)
+						bsp_avg_data[timestamp] = round(avg_bsp, 2)
 
-						print("TWA: {} TWS: {} BSP: {}".format(round(avg_twa), round(avg_tws, 2), round(avg_bsp, 2)))
+						#print("TWA: {} TWS: {} BSP: {}".format(round(avg_twa), round(avg_tws, 2), round(avg_bsp, 2)))
 
 						bp.bin_speeds(avg_twa, avg_tws, avg_bsp)
 						#bp.bin_speeds(twa_list[0], tws_list[0], bsp_list[0])
@@ -209,7 +216,86 @@ def main():
 			else:
 				print ("Empty lines...")
 
-		fp.close()		
+		fp.close()	
+		
+		#reset our graph.
+		#plt.figure()
+		fig, (twa_ax, tws_ax, bsp_ax) = plt.subplots(3)
+		fig.suptitle("{}".format(os.path.basename(myfile)))
+
+		#this is our TWS portion of the graph
+		tws_index = pd.DatetimeIndex(tws_data.keys())
+		tws_df = pd.DataFrame({'time': tws_index, 'tws': tws_data}, index=tws_index)
+		tws_avg_index = pd.DatetimeIndex(tws_avg_data.keys())
+		tws_avg_df = pd.DataFrame({'time': tws_avg_index, 'tws': tws_avg_data}, index=tws_avg_index)
+
+		#raw data as a scatterplot
+		x = tws_df['time']
+		y = tws_df['tws']
+		tws_ax.scatter(x, y, s=0.5, c='orange', label='Raw')
+
+		#average as a line plot
+		x = tws_avg_df['time']
+		y = tws_avg_df['tws']
+		tws_ax.plot(x, y, c='royalblue', label='Average', linewidth=0.8)
+
+		#show 0kts as base
+		tws_ax.set_ylim([0, None])
+		tws_ax.set(ylabel='TWS')
+
+		#this is our TWA portion of the graph
+		twa_index = pd.DatetimeIndex(twa_data.keys())
+		twa_df = pd.DataFrame({'time': twa_index, 'twa': twa_data}, index=twa_index)
+		twa_avg_index = pd.DatetimeIndex(twa_avg_data.keys())
+		twa_avg_df = pd.DataFrame({'time': twa_avg_index, 'twa': twa_avg_data}, index=twa_avg_index)
+
+		#raw data as a scatterplot
+		x = twa_df['time']
+		y = twa_df['twa']
+		twa_ax.scatter(x, y, s=0.5, c='orange', label='Raw')
+
+		#average as a line plot
+		x = twa_avg_df['time']
+		y = twa_avg_df['twa']
+		twa_ax.plot(x, y, c='royalblue', label='Average', linewidth=0.8)
+
+		#show 0kts as base
+		twa_ax.set_ylim([0, None])
+		twa_ax.set(ylabel='TWA')
+
+		#this is our BSP portion of the graph
+		bsp_index = pd.DatetimeIndex(bsp_data.keys())
+		bsp_df = pd.DataFrame({'time': bsp_index, 'bsp': bsp_data}, index=bsp_index)
+		bsp_avg_index = pd.DatetimeIndex(bsp_avg_data.keys())
+		bsp_avg_df = pd.DataFrame({'time': bsp_avg_index, 'bsp': bsp_avg_data}, index=bsp_avg_index)
+
+		#raw data as a scatterplot
+		x = bsp_df['time']
+		y = bsp_df['bsp']
+		bsp_ax.scatter(x, y, s=0.5, c='orange', label='Raw')
+
+		#average as a line plot
+		x = bsp_avg_df['time']
+		y = bsp_avg_df['bsp']
+		bsp_ax.plot(x, y, c='royalblue', label='Average', linewidth=0.8)
+
+		#show 0kts as base
+		bsp_ax.set_ylim([0, None])
+		bsp_ax.set(ylabel='BSP')
+
+		#plt.show()
+		
+		#print(myfile)
+		file_parts = os.path.split(myfile)
+		category = os.path.basename(file_parts[0])
+		graph_output_dir = "graphs/{}".format(category)
+		#print(graph_output_dir)
+		
+		if not os.path.exists(graph_output_dir):
+			os.makedirs(graph_output_dir)
+			
+		graph_output_file = "{}/data-{}.png".format(graph_output_dir, file_parts[1])
+		plt.savefig(graph_output_file, bbox_inches='tight', dpi=300)
 
 	#cruncho el numero
 	all_polars = bp.generate_polars()
@@ -219,47 +305,6 @@ def main():
 		fname = "polars/{}-{}.csv".format(polar_name, idx)
 		print("Writing results to {}".format(fname))
 		polar.write_csv(fname)
-
-	#Pandas Test Zone!
-	if args.graph:
-		tws_index = pd.DatetimeIndex(tws_time)
-		tws_df = pd.DataFrame({'time': tws_index, 'tws': tws_data}, index=tws_index)
-
-		tws_avg_index = pd.DatetimeIndex(tws_avg_time)
-		tws_avg_df = pd.DataFrame({'time': tws_avg_index, 'tws': tws_avg_data}, index=tws_avg_index)
-
-		print(tws_df)
-		print(tws_avg_df)
-
-		x = tws_df['time']
-		y = tws_df['tws']
-		plt.scatter(x, y, s=1, c='orange', label='Raw')
-
-		x = tws_avg_df['time']
-		y = tws_avg_df['tws']
-		plt.plot(x, y, c='royalblue', label='Average')
-		#plt.xlabel('Time')
-		#plt.ylabel('TWS')
-
-		b, a = signal.ellip(4, 0.01, 120, 0.125)  # Filter to be applied.
-		fgust = signal.filtfilt(b, a, tws_df['tws'], method="gust")
-		#plt.plot(x, fgust[0:len(x)], c='red', label='FiltFilt')
-
-		b, a = signal.ellip(8, 0.01, 120, 0.125)  # Filter to be applied.
-		fgust = signal.filtfilt(b, a, tws_df['tws'], method="gust")
-		#plt.plot(x, fgust[0:len(x)], c='green', label='FiltFilt8')
-
-		b, a = signal.ellip(10, 0.01, 120, 0.125)  # Filter to be applied.
-		fgust = signal.filtfilt(b, a, tws_df['tws'], method="gust")
-		plt.plot(x, fgust[0:len(x)], c='purple', label='FiltFilt10')
-
-		ax = plt.gca()
-		ax.set_ylim([0, None])
-
-		plt.xlabel('Time')
-		plt.ylabel('TWS')
-		plt.legend()
-		plt.show()
 
 if __name__ == '__main__':
 	main()

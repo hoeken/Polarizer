@@ -163,7 +163,7 @@ class BoatPolar:
 					polars['stddev'].set_speed(angle, speed, bin_stddev)
 					polars['vmg'].set_speed(angle, speed, bin_vmg)
 					
-					graph = True
+					graph = False
 					if graph:
 						x = self.bins[speed][angle]
 						plt.hist(x, bins=25)

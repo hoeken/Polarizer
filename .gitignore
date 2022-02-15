@@ -1,6 +1,7 @@
 #output of our scripts...
 data/
 polars/
+graphs/
 
 .DS_Store
 
