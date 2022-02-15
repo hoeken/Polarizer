@@ -163,10 +163,10 @@ class BoatPolar:
 					polars['stddev'].set_speed(angle, speed, bin_stddev)
 					polars['vmg'].set_speed(angle, speed, bin_vmg)
 					
-					graph = False
+					graph = True
 					if graph:
 						x = self.bins[speed][angle]
-						plt.hist(x, bins=100)
+						plt.hist(x, bins=25)
 						plt.axvline(x=bin_mean, c='orange', label="Average")
 						#plt.axvline(x=bin_mean-bin_stddev, c='red', label='Std Dev')
 						#plt.axvline(x=bin_mean+bin_stddev, c='red', label='Std Dev')

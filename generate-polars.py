@@ -87,7 +87,8 @@ def main():
 		polar_name = os.path.basename(path)
 		dirfiles = os.listdir(path)
 		for fname in dirfiles:
-			files.append(os.path.join(path, fname))
+			if fname.endswith('.txt'):
+				files.append(os.path.join(path, fname))
 		
 		if len(files) == 0:
 			print ("No files found in {}".format(path))
@@ -201,6 +202,7 @@ def main():
 						print("TWA: {} TWS: {} BSP: {}".format(round(avg_twa), round(avg_tws, 2), round(avg_bsp, 2)))
 
 						bp.bin_speeds(avg_twa, avg_tws, avg_bsp)
+						#bp.bin_speeds(twa_list[0], tws_list[0], bsp_list[0])
 						
 						wind_time = 0
 						bsp_time = 0
