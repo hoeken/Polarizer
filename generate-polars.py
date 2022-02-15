@@ -39,7 +39,7 @@ def generate_polars():
 	if args.file:
 		#make sure it exists
 		if not os.path.isfile(args.file):
-			print "Log file %s does not exist." % (args.file)
+			print ("Log file %s does not exist." % (args.file))
 			return False
 		else:
 			files.append(args.file)
@@ -51,7 +51,7 @@ def generate_polars():
 	#a directory of files?
 	elif args.dir:
 		if not os.path.exists(args.dir):
-			print "Director %s does not exist." % (args.dir)
+			print ("Director %s does not exist." % (args.dir))
 			return False
 
 		#use our directory name
@@ -62,7 +62,7 @@ def generate_polars():
 			files.append(os.path.join(path, fname))
 		
 		if len(files) == 0:
-			print "No files found in {}".format(path)
+			print ("No files found in {}".format(path))
 			return False
 
 	#what is our 'category' for polar data
