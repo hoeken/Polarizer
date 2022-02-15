@@ -1,5 +1,4 @@
 TODO:
 
-* output graphs to a graph directory instead of just displaying them
 * write an interpolation utility script to change from one set of polar ranges to another
 * data entry on VPPs from dutoit

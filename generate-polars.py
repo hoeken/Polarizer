@@ -285,20 +285,21 @@ def main():
 
 		#plt.show()
 		
-		#print(myfile)
+		#where to save it?
 		file_parts = os.path.split(myfile)
 		category = os.path.basename(file_parts[0])
 		graph_output_dir = "graphs/{}".format(category)
-		#print(graph_output_dir)
-		
+
 		if not os.path.exists(graph_output_dir):
 			os.makedirs(graph_output_dir)
 			
+		#okay, actually save
 		graph_output_file = "{}/data-{}.png".format(graph_output_dir, file_parts[1])
-		plt.savefig(graph_output_file, bbox_inches='tight', dpi=300)
+		plt.savefig(graph_output_file, bbox_inches='tight', dpi=600)
+		plt.clf()
 
 	#cruncho el numero
-	all_polars = bp.generate_polars()
+	all_polars = bp.generate_polars(graph_output_dir)
 	
 	#write our files...
 	for idx, polar in all_polars.items():
