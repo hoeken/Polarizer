@@ -1,3 +1,19 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""Test BSP
+A one-off test script to compare BSP and SOG and see how much they varied.
+"""
+
+__author__ = "Zach Hoeken"
+__copyright__ = "Copyright 2022, Zach Hoeken"
+__credits__ = ["Zach Hoeken"]
+__license__ = "GPL"
+__version__ = "1.0.0"
+__maintainer__ = "Zach Hoeken"
+__email__ = "hoeken@gmail.com"
+__status__ = "Beta"
+
 import json
 import numpy
 import nmea0183

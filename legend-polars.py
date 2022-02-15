@@ -1,3 +1,19 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""Legend Polars
+Builds a 'best of sailset' polar based on a legend file so you can pick and choose what sailset to use for a given TWA/TWS pair
+"""
+
+__author__ = "Zach Hoeken"
+__copyright__ = "Copyright 2022, Zach Hoeken"
+__credits__ = ["Zach Hoeken"]
+__license__ = "GPL"
+__version__ = "1.0.0"
+__maintainer__ = "Zach Hoeken"
+__email__ = "hoeken@gmail.com"
+__status__ = "Beta"
+
 import argparse
 import os
 import json
@@ -10,7 +26,7 @@ from pprint import pprint
 import nmea0183
 import boatpolar
 
-def legend_polars():
+def main():
 	#these are our command line arguments
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-l', '--legend', action='store', required=True)
@@ -85,5 +101,5 @@ def legend_polars():
 	print("Finished combining polars based on legend.")
 			
 if __name__ == '__main__':
-	legend_polars()
+	main()
     

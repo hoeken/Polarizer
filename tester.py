@@ -1,3 +1,19 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""tester
+Basic test script that connects to a NMEA0183 server and reads data
+"""
+
+__author__ = "Zach Hoeken"
+__copyright__ = "Copyright 2022, Zach Hoeken"
+__credits__ = ["Zach Hoeken"]
+__license__ = "GPL"
+__version__ = "1.0.0"
+__maintainer__ = "Zach Hoeken"
+__email__ = "hoeken@gmail.com"
+__status__ = "Beta"
+
 import socket, time
 import pprint
 import datetime

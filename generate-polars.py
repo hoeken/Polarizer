@@ -1,3 +1,19 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""Generate Polars
+Parses NMEA0183 log files and generates polars.
+"""
+
+__author__ = "Zach Hoeken"
+__copyright__ = "Copyright 2022, Zach Hoeken"
+__credits__ = ["Zach Hoeken"]
+__license__ = "GPL"
+__version__ = "1.0.0"
+__maintainer__ = "Zach Hoeken"
+__email__ = "hoeken@gmail.com"
+__status__ = "Beta"
+
 import argparse
 import os
 import json
@@ -10,7 +26,7 @@ from pprint import pprint
 import nmea0183
 import boatpolar
 
-def generate_polars():
+def main():
 	#these are our command line arguments
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-f', '--file', action='store')
@@ -185,5 +201,5 @@ def generate_polars():
 		polar.write_csv(fname)
 		
 if __name__ == '__main__':
-	generate_polars()
+	main()
     

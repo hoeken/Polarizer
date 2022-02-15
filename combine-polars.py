@@ -1,3 +1,19 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""Combine Polars
+Combine various polar files into a single 'best of sailset' polar file.  Will generate speed polar, best sailset polar, sailset legend, and PredictWind polar.
+"""
+
+__author__ = "Zach Hoeken"
+__copyright__ = "Copyright 2022, Zach Hoeken"
+__credits__ = ["Zach Hoeken"]
+__license__ = "GPL"
+__version__ = "1.0.0"
+__maintainer__ = "Zach Hoeken"
+__email__ = "hoeken@gmail.com"
+__status__ = "Beta"
+
 import argparse
 import os
 import json
@@ -10,7 +26,7 @@ from pprint import pprint
 import nmea0183
 import boatpolar
 
-def combine_polars():
+def main():
 	#these are our command line arguments
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-a', action='store')
@@ -102,5 +118,5 @@ def combine_polars():
 	print("Finished combining polars.")
 			
 if __name__ == '__main__':
-	combine_polars()
+	main()
     

@@ -1,3 +1,19 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+"""Log NMEA0183 over IP
+The logging script that will connect to a NMEA0183 server over IP (such as from a B&G MFD) and log the data to a file.
+"""
+
+__author__ = "Zach Hoeken"
+__copyright__ = "Copyright 2022, Zach Hoeken"
+__credits__ = ["Zach Hoeken"]
+__license__ = "GPL"
+__version__ = "1.0.0"
+__maintainer__ = "Zach Hoeken"
+__email__ = "hoeken@gmail.com"
+__status__ = "Beta"
+
 import socket, time
 import pprint
 import datetime
@@ -7,7 +23,7 @@ import os
 import nmea0183
 from pprint import pprint
 
-def log_data():
+def main():
     
 	#these are our command line arguments
 	parser = argparse.ArgumentParser()
@@ -75,4 +91,4 @@ def log_data():
 	s.close()
 		
 if __name__ == '__main__':
-	log_data()
+	main()
