@@ -20,6 +20,7 @@ import numpy
 import csv
 import math
 from pprint import pprint
+import matplotlib.pyplot as plt
 
 class BoatPolar:
 
@@ -161,7 +162,21 @@ class BoatPolar:
 					polars['count'].set_speed(angle, speed, bin_count)
 					polars['stddev'].set_speed(angle, speed, bin_stddev)
 					polars['vmg'].set_speed(angle, speed, bin_vmg)
-
+					
+					graph = False
+					if graph:
+						x = self.bins[speed][angle]
+						plt.hist(x, bins=100)
+						plt.axvline(x=bin_mean, c='orange', label="Average")
+						#plt.axvline(x=bin_mean-bin_stddev, c='red', label='Std Dev')
+						#plt.axvline(x=bin_mean+bin_stddev, c='red', label='Std Dev')
+						title = '{}kts TWS @ {} TWA ({} Total Points)'.format(speed, angle, len(mybin))
+						plt.gca().set(title=title, ylabel='Count');
+						ax = plt.gca()
+						ax.set_xlim([0, 15])
+						plt.legend()
+						plt.show()
+					
 		return polars
 
 	def write_csv(self, filename, polars = None):
