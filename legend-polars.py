@@ -40,7 +40,7 @@ def main():
 
 	#did we get a real legend?
 	if not os.path.isfile(args.legend):
-		print "Legend file %s does not exist." % (args.legend)
+		print ("Legend file %s does not exist." % (args.legend))
 		return False
 	else:
 		lfp = open(args.legend)
@@ -48,7 +48,7 @@ def main():
 
 	#did we get a real sailset?
 	if not os.path.isfile(args.sailset):
-		print "Sailset file %s does not exist." % (args.sailset)
+		print ("Sailset file %s does not exist." % (args.sailset))
 		return False
 	else:
 		sfp = open(args.sailset)
@@ -64,7 +64,7 @@ def main():
 			filename = row[1]
 			
 			if not os.path.isfile(filename):
-				print "Polar file %s does not exist." % (args.legend)
+				print ("Polar file %s does not exist." % (args.legend))
 				return False
 			else:
 				files[category] = filename

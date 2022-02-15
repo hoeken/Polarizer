@@ -24,7 +24,7 @@ import nmea0183
 import numpy
 from pprint import pprint
 
-def listener():
+def main():
     
 	#these are our command line arguments
 	parser = argparse.ArgumentParser()
@@ -72,4 +72,4 @@ def listener():
 	s.close()
 		
 if __name__ == '__main__':
-	listener()
+	main()

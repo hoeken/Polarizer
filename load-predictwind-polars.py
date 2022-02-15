@@ -26,7 +26,7 @@ from pprint import pprint
 import nmea0183
 import boatpolar
 
-def predictwind_polars():
+def main():
 	#these are our command line arguments
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-f', '--file', action='store', required=True)
@@ -38,7 +38,7 @@ def predictwind_polars():
 
 	#did we get a real legend?
 	if not os.path.isfile(args.file):
-		print "Predictwind file %s does not exist." % (args.file)
+		print ("Predictwind file %s does not exist." % (args.file))
 		return False
 	else:
 		fp = open(args.file)
@@ -101,5 +101,5 @@ def predictwind_polars():
 	print("Finished loading Predictwind polars")
 			
 if __name__ == '__main__':
-	predictwind_polars()
+	main()
     

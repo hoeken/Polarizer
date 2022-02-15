@@ -125,7 +125,7 @@ def main():
 					output['time'] = data['time']
 
 					#oh sweet sweet unix epoch
-					if data.has_key('unix_time'):
+					if 'unix_time' in data:
 						unix_time = data['unix_time']
 					#fucking date times.... old log entries didnt have the unix_time variable
 					else:
@@ -139,7 +139,7 @@ def main():
 						unix_time += micros
 
 					#wind speed...
-					if output.has_key('tws') and output.has_key('twa'):
+					if 'tws' in output and 'twa' in output:
 						twa = float(output['twa'])
 						tws = float(output['tws'])
 						if (twa < args.twa_min):
@@ -155,12 +155,12 @@ def main():
 							
 					#boat speed... use SOG
 					if use_sog:
-						if output.has_key('sog') and nmea.sentence == 'RMC' and output['sog']:
+						if 'sog' in output and nmea.sentence == 'RMC' and output['sog']:
 							bsp = float(output['sog'])
 							bsp_list.append(bsp)
 							bsp_time = unix_time
 					else:
-						if output.has_key('water_speed') and nmea.sentence == 'VHW' and output['water_speed']:
+						if 'water_speed' in output and nmea.sentence == 'VHW' and output['water_speed']:
 							bsp = float(output['water_speed'])
 							bsp_list.append(bsp)
 							bsp_time = unix_time
@@ -195,7 +195,7 @@ def main():
 	all_polars = bp.generate_polars()
 	
 	#write our files...
-	for idx, polar in all_polars.iteritems():
+	for idx, polar in all_polars.items():
 		fname = "polars/{}-{}.csv".format(polar_name, idx)
 		print("Writing results to {}".format(fname))
 		polar.write_csv(fname)

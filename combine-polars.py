@@ -61,14 +61,14 @@ def main():
 		categories['F'] = args.f
 
 	#use our categories to build a file list
-	for key, val in categories.iteritems():
+	for key, val in categories.items():
 		#files[key] = "polars/{}-median.csv".format(val)
 		files[key] = "polars/{}-mean.csv".format(val)
 
 	#make sure it exists
-	for key, my_file in files.iteritems():
+	for key, my_file in files.items():
 		if not os.path.isfile(my_file):
-			print "Polar file %s does not exist." % (my_file)
+			print ("Polar file %s does not exist." % (my_file))
 			return False
 		
 		#load and parse our polar files...
@@ -77,7 +77,7 @@ def main():
 		polars[key].load_polar(fp)
 
 	#loop through each of our loaded polars.
-	for key, polar in polars.iteritems():
+	for key, polar in polars.items():
 		#wind angle
 		for twa in boatpolar.BoatPolar.wind_angles:
 			#wind speed
@@ -87,7 +87,8 @@ def main():
 				#did we get one?
 				if boat_speed is not None:
 					if boat_speed > 0:
-						if max_speed.get_speed(twa, tws) < boat_speed:
+						max_boat_speed = max_speed.get_speed(twa, tws)
+						if not max_boat_speed or max_boat_speed < boat_speed:
 							#save it to our legend and max speed
 							legend.set_speed(twa, tws, key)
 							max_speed.set_speed(twa, tws, boat_speed)
