@@ -26,17 +26,23 @@ from pprint import pprint
 import nmea0183
 import boatpolar
 
+from scipy import signal
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
 def main():
 	#these are our command line arguments
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-f', '--file', action='store')
 	parser.add_argument('-d', '--dir', action='store')
 	parser.add_argument('-p', '--polar', action='store')
+	parser.add_argument('-g', '--graph', default=False, action='store_true')
 	parser.add_argument('--twa_min', action='store', default = 0, type=float)
 	parser.add_argument('--twa_max', action='store', default = 180, type=float)
 
 	args = parser.parse_args()
-
+	
 	bp = boatpolar.BoatPolar()
 	files = []
 	polar_name = 'unknown'
@@ -50,6 +56,12 @@ def main():
 	bsp_list = []
 	wind_time = 0
 	bsp_time = 0
+	
+	#this is for graphing... probably a better way to do this.
+	tws_time = []
+	tws_data = []
+	tws_avg_time = []
+	tws_avg_data = []
 	
 	#did we get a single file?
 	if args.file:
@@ -152,6 +164,9 @@ def main():
 						twa_list.append(twa)
 						tws_list.append(tws)
 						wind_time = unix_time
+						
+						tws_time.append(datetime.datetime.fromtimestamp(unix_time))
+						tws_data.append(tws)
 							
 					#boat speed... use SOG
 					if use_sog:
@@ -179,6 +194,9 @@ def main():
 						avg_twa = numpy.average(twa_list)
 						avg_tws = numpy.average(tws_list)
 						avg_bsp = numpy.average(bsp_list)
+						
+						tws_avg_time.append(datetime.datetime.fromtimestamp(wind_time))
+						tws_avg_data.append(round(avg_tws, 2))
 
 						print("TWA: {} TWS: {} BSP: {}".format(round(avg_twa), round(avg_tws, 2), round(avg_bsp, 2)))
 
@@ -199,7 +217,48 @@ def main():
 		fname = "polars/{}-{}.csv".format(polar_name, idx)
 		print("Writing results to {}".format(fname))
 		polar.write_csv(fname)
-		
+
+	#Pandas Test Zone!
+	if args.graph:
+		tws_index = pd.DatetimeIndex(tws_time)
+		tws_df = pd.DataFrame({'time': tws_index, 'tws': tws_data}, index=tws_index)
+
+		tws_avg_index = pd.DatetimeIndex(tws_avg_time)
+		tws_avg_df = pd.DataFrame({'time': tws_avg_index, 'tws': tws_avg_data}, index=tws_avg_index)
+
+		print(tws_df)
+		print(tws_avg_df)
+
+		x = tws_df['time']
+		y = tws_df['tws']
+		plt.scatter(x, y, s=1, c='orange', label='Raw')
+
+		x = tws_avg_df['time']
+		y = tws_avg_df['tws']
+		plt.plot(x, y, c='royalblue', label='Average')
+		#plt.xlabel('Time')
+		#plt.ylabel('TWS')
+
+		b, a = signal.ellip(4, 0.01, 120, 0.125)  # Filter to be applied.
+		fgust = signal.filtfilt(b, a, tws_df['tws'], method="gust")
+		#plt.plot(x, fgust[0:len(x)], c='red', label='FiltFilt')
+
+		b, a = signal.ellip(8, 0.01, 120, 0.125)  # Filter to be applied.
+		fgust = signal.filtfilt(b, a, tws_df['tws'], method="gust")
+		#plt.plot(x, fgust[0:len(x)], c='green', label='FiltFilt8')
+
+		b, a = signal.ellip(10, 0.01, 120, 0.125)  # Filter to be applied.
+		fgust = signal.filtfilt(b, a, tws_df['tws'], method="gust")
+		plt.plot(x, fgust[0:len(x)], c='purple', label='FiltFilt10')
+
+		ax = plt.gca()
+		ax.set_ylim([0, None])
+
+		plt.xlabel('Time')
+		plt.ylabel('TWS')
+		plt.legend()
+		plt.show()
+
 if __name__ == '__main__':
 	main()
     
