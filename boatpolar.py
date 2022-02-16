@@ -117,7 +117,7 @@ class BoatPolar:
 					self.set_speed(twa, tws, boat_speed)
 			i += 1
 
-	def generate_polars(self, graph_dir=None):
+	def generate_polars(self, graph_dir=None, max_bsp=15):
 		
 		polars = {}
 		polars['mean'] = BoatPolar()
@@ -163,27 +163,31 @@ class BoatPolar:
 					polars['stddev'].set_speed(angle, speed, bin_stddev)
 					polars['vmg'].set_speed(angle, speed, bin_vmg)
 					
+					#where do we graph it to?
+					#some lines
+					plt.axvline(x=bin_mean, c='red', label="BSP ({})".format(bin_mean), linewidth=0.5, zorder=3, alpha = 0.5)
+					plt.axvspan(bin_mean-bin_stddev, bin_mean+bin_stddev, color='red', linewidth=0, alpha=0.1, zorder=3, label = '+/- 1 Sigma')
+
+					#plot the histogram
+					x = self.bins[speed][angle]
+					plt.hist(x, bins=50, zorder=2)
+
+					#set our titles and axes.
+					title = '{}kts TWS @ {} TWA ({} Total Points)'.format(speed, angle, len(mybin))
+					plt.gca().set(title=title, ylabel='Count');
+					ax = plt.gca()
+					ax.set_xlim([0, 15])
+					plt.legend()
+
+					#should we show interactive?
+					#plt.show()
+
+					#okay, actually save
 					if graph_dir:
-						#some lines
-						plt.axvline(x=bin_mean, c='orange', label="Average", linewidth=1.0, zorder=3, alpha = 0.5)
-						plt.axvline(x=bin_mean-bin_stddev, c='red', label='Std Dev', linewidth=1.0, zorder=3, alpha = 0.5)
-						plt.axvline(x=bin_mean+bin_stddev, c='red', label='Std Dev', linewidth=1.0, zorder=3, alpha = 0.5)
-
-						#plot the histogram
-						x = self.bins[speed][angle]
-						plt.hist(x, bins=50, zorder=2)
-
-						title = '{}kts TWS @ {} TWA ({} Total Points)'.format(speed, angle, len(mybin))
-						plt.gca().set(title=title, ylabel='Count');
-						ax = plt.gca()
-						ax.set_xlim([0, 15])
-						plt.legend()
-						#plt.show()
-						
-						#okay, actually save
 						graph_output_file = "{}/histogram-{}TWS-{}TWA.png".format(graph_dir, speed, angle)
-						plt.savefig(graph_output_file, bbox_inches='tight', dpi=600)
-						plt.clf()
+						plt.savefig(graph_output_file, bbox_inches='tight', dpi =600)
+
+					plt.clf()
 					
 		return polars
 

@@ -30,8 +30,8 @@ Afterwards, you can generate polars for each individual sail configuration and t
 ./generate-polars.py -d 'data/screacher and full main'
 ./generate-polars.py -d 'data/jib and full main'
 ./generate-polars.py -d 'data/jib and first reef'
-./generate-polars.py --twa_min=110 -d 'data/twin bow spin'
-./generate-polars.py --twa_min=110 -d 'data/bowsprit spin'
+./generate-polars.py -d 'data/twin bow spin'
+./generate-polars.py -d 'data/bowsprit spin'
 
 ./combine-polars.py -a 'screacher and full main' -b 'jib and full main' -c 'jib and first reef' -d 'twin bow spin' -e 'bowsprit spin'
 ~~~
@@ -43,3 +43,38 @@ You can also manually choose what sail data to use for a particular TWA/TWS with
 ~~~
 ./legend-polars.py -l polars/combined-polars-legend.csv -s polars/combined-polars-sailset.csv
 ~~~
+
+## Cleanup
+
+Sometimes you might get some bad data that you want to trim out. Luckily, the log files are stored with a human readable timestamp, and each log entry is a single line. You can simply delete the offending lines if its at the beginning/end of a file, or split the files and cut the bag part out. For example if you forget to stop the script when you make a sail change, something goes wrong with the data collection, etc.
+
+Simple bash script below for cutting out a portion of the log file. You will need to rename the files appropriately afterwards.
+~~~
+#file to be sliced
+MYFILE=data/bowsprit\ spin\ test/stargazer-spin-bowsprit-n03.txt
+START_TIMESTAMP=2022-01-08T00:20:00
+END_TIMESTAMP=2022-01-08T01:09:00
+#start time/line of the file to cut out
+START_LINE=$(grep -n -m 1 $START_TIMESTAMP "$MYFILE" |sed  's/\([0-9]*\).*/\1/')
+START_LINE=$(($START_LINE-1))
+echo $START_LINE
+
+#end time/line of the file to cut out
+END_LINE=$(grep -n -m 1 "$END_TIMESTAMP" "$MYFILE" |sed  's/\([0-9]*\).*/\1/')
+echo $END_LINE
+
+#do the actual slicing
+(head -$START_LINE > data/firstpart.txt) < "$MYFILE"
+(head -$END_LINE > /dev/null; cat > data/lastpart.txt) < "$MYFILE"
+
+#check the results...
+./generate-polars.py -g -f data/firstpart.txt
+./generate-polars.py -g -f data/lastpart.txt
+~~~
+
+Split files in to chunks of ### lines:
+
+~~~
+split --verbose -dl 300000 --additional-suffix=.txt "mydata.txt" "mydata-split"
+~~~
+

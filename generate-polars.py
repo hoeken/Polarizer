@@ -29,6 +29,7 @@ import boatpolar
 from scipy import signal
 import pandas as pd
 import numpy as np
+import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 
 def main():
@@ -37,6 +38,7 @@ def main():
 	parser.add_argument('-f', '--file', action='store')
 	parser.add_argument('-d', '--dir', action='store')
 	parser.add_argument('-p', '--polar', action='store')
+	parser.add_argument('-g', '--graph', default=False, action='store_true')
 	parser.add_argument('--twa_min', action='store', default = 0, type=float)
 	parser.add_argument('--twa_max', action='store', default = 180, type=float)
 
@@ -50,11 +52,6 @@ def main():
 	
 	#our running avg since nmea0183 sucks
 	running_avg_count = 10
-	twa_list = []
-	tws_list = []
-	bsp_list = []
-	wind_time = 0
-	bsp_time = 0
 	
 	#did we get a single file?
 	if args.file:
@@ -90,9 +87,19 @@ def main():
 	#what is our 'category' for polar data
 	if args.polar:
 		polar_name = args.polar
+
+	#what is our maximum boat speed we saw?
+	max_bsp = 0
 		
 	#loop through all our data files
 	for myfile in files:
+	
+		#init our arrays
+		twa_list = []
+		tws_list = []
+		bsp_list = []
+		wind_time = 0
+		bsp_time = 0
 
 		#this is for graphing... probably a better way to do this.
 		tws_data = {}
@@ -139,18 +146,18 @@ def main():
 					output['time'] = data['time']
 
 					#oh sweet sweet unix epoch
-					if 'unix_time' in data:
-						unix_time = data['unix_time']
+					#if 'unix_time' in data:
+					#	unix_time = data['unix_time']
 					#fucking date times.... old log entries didnt have the unix_time variable
+					#else:
+					ts = datetime.datetime.strptime(output['time'][0:19], "%Y-%m-%dT%H:%M:%S")
+					unix_time = time.mktime(ts.timetuple())
+					micros = output['time'][19:]
+					if micros != '':
+						micros = float(micros)
 					else:
-						ts = datetime.datetime.strptime(output['time'][0:19], "%Y-%m-%dT%H:%M:%S")
-						unix_time = time.mktime(ts.timetuple())
-						micros = output['time'][19:]
-						if micros != '':
-							micros = float(micros)
-						else:
-							micros = 0.0
-						unix_time += micros
+						micros = 0.0
+					unix_time += micros
 
 					#need this later
 					timestamp = datetime.datetime.fromtimestamp(unix_time)
@@ -202,6 +209,8 @@ def main():
 						avg_tws = numpy.average(tws_list)
 						avg_bsp = numpy.average(bsp_list)
 						
+						max_bsp = max(max_bsp, avg_bsp)
+						
 						tws_avg_data[timestamp] = round(avg_tws, 2)
 						twa_avg_data[timestamp] = round(avg_twa, 2)
 						bsp_avg_data[timestamp] = round(avg_bsp, 2)
@@ -218,10 +227,13 @@ def main():
 
 		fp.close()	
 		
+		scatter_size = 1
+		line_size = 0.3
+		
 		#reset our graph.
 		#plt.figure()
 		fig, (twa_ax, tws_ax, bsp_ax) = plt.subplots(3)
-		fig.suptitle("{}".format(os.path.basename(myfile)))
+		fig.suptitle("{} ({} Points)".format(os.path.basename(myfile), len(tws_data)))
 
 		#this is our TWS portion of the graph
 		tws_index = pd.DatetimeIndex(tws_data.keys())
@@ -232,17 +244,19 @@ def main():
 		#raw data as a scatterplot
 		x = tws_df['time']
 		y = tws_df['tws']
-		tws_ax.scatter(x, y, s=0.5, c='orange', label='Raw')
+		tws_ax.scatter(x, y, s=scatter_size, c='#00bf00', label='Raw', marker='.', linewidth=0)
 
 		#average as a line plot
 		x = tws_avg_df['time']
 		y = tws_avg_df['tws']
-		tws_ax.plot(x, y, c='royalblue', label='Average', linewidth=0.8)
+		tws_ax.plot(x, y, c='black', label='Average', linewidth=line_size)
 
 		#show 0kts as base
 		tws_ax.set_ylim([0, None])
 		tws_ax.set(ylabel='TWS')
-
+		tws_ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
+		tws_ax.xaxis.set_minor_formatter(mdates.DateFormatter("%H:%M"))
+		
 		#this is our TWA portion of the graph
 		twa_index = pd.DatetimeIndex(twa_data.keys())
 		twa_df = pd.DataFrame({'time': twa_index, 'twa': twa_data}, index=twa_index)
@@ -252,16 +266,18 @@ def main():
 		#raw data as a scatterplot
 		x = twa_df['time']
 		y = twa_df['twa']
-		twa_ax.scatter(x, y, s=0.5, c='orange', label='Raw')
+		twa_ax.scatter(x, y, s=scatter_size, c='#bf0000', label='Raw', marker='.', linewidth=0)
 
 		#average as a line plot
 		x = twa_avg_df['time']
 		y = twa_avg_df['twa']
-		twa_ax.plot(x, y, c='royalblue', label='Average', linewidth=0.8)
+		twa_ax.plot(x, y, c='black', label='Average', linewidth=line_size)
 
 		#show 0kts as base
 		twa_ax.set_ylim([0, None])
 		twa_ax.set(ylabel='TWA')
+		twa_ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
+		twa_ax.xaxis.set_minor_formatter(mdates.DateFormatter("%H:%M"))
 
 		#this is our BSP portion of the graph
 		bsp_index = pd.DatetimeIndex(bsp_data.keys())
@@ -272,34 +288,50 @@ def main():
 		#raw data as a scatterplot
 		x = bsp_df['time']
 		y = bsp_df['bsp']
-		bsp_ax.scatter(x, y, s=0.5, c='orange', label='Raw')
+		bsp_ax.scatter(x, y, s=scatter_size, c='#0000bf', label='Raw', marker='.', linewidth=0)
 
 		#average as a line plot
 		x = bsp_avg_df['time']
 		y = bsp_avg_df['bsp']
-		bsp_ax.plot(x, y, c='royalblue', label='Average', linewidth=0.8)
+		bsp_ax.plot(x, y, c='black', label='Average', linewidth=line_size)
 
 		#show 0kts as base
 		bsp_ax.set_ylim([0, None])
 		bsp_ax.set(ylabel='BSP')
+		bsp_ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
+		bsp_ax.xaxis.set_minor_formatter(mdates.DateFormatter("%H:%M"))
 
-		#plt.show()
-		
-		#where to save it?
-		file_parts = os.path.split(myfile)
-		category = os.path.basename(file_parts[0])
-		graph_output_dir = "graphs/{}".format(category)
+		#auto format our date ticks.
+		plt.setp(tws_ax.get_xticklabels(), rotation=0, horizontalalignment='center', fontsize=6)
+		plt.setp(twa_ax.get_xticklabels(), rotation=0, horizontalalignment='center', fontsize=6)
+		plt.setp(bsp_ax.get_xticklabels(), rotation=0, horizontalalignment='center', fontsize=6)
 
-		if not os.path.exists(graph_output_dir):
-			os.makedirs(graph_output_dir)
-			
-		#okay, actually save
-		graph_output_file = "{}/data-{}.png".format(graph_output_dir, file_parts[1])
-		plt.savefig(graph_output_file, bbox_inches='tight', dpi=600)
+    	#give us a nicely spaced set of graphs
+		fig.tight_layout()    
+    
+		#do we want to show the interactive one?
+		if args.graph:
+			plt.show()
+		else:
+			#where to save it?
+			file_parts = os.path.split(myfile)
+			category = os.path.basename(file_parts[0])
+			graph_output_dir = "graphs/{}".format(category)
+
+			if not os.path.exists(graph_output_dir):
+				os.makedirs(graph_output_dir)
+				
+			#okay, actually save
+			graph_output_file = "{}/data-{}.png".format(graph_output_dir, file_parts[1])
+			plt.savefig(graph_output_file, bbox_inches='tight', dpi=600)
+
+		#finally, clear our graph for the next one
 		plt.clf()
 
 	#cruncho el numero
-	all_polars = bp.generate_polars(graph_output_dir)
+	if args.graph:
+		graph_output_dir = None
+	all_polars = bp.generate_polars(graph_output_dir, max_bsp)
 	
 	#write our files...
 	for idx, polar in all_polars.items():
