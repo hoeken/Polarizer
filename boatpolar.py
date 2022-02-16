@@ -20,6 +20,8 @@ import numpy
 import csv
 import math
 from pprint import pprint
+
+import numpy as np
 import matplotlib.pyplot as plt
 
 class BoatPolar:
@@ -188,6 +190,7 @@ class BoatPolar:
 						plt.savefig(graph_output_file, bbox_inches='tight', dpi =600)
 
 					plt.clf()
+					plt.close()
 					
 		return polars
 
@@ -227,3 +230,49 @@ class BoatPolar:
 					else:
 						row.append(0.0)
 				csv_writer.writerow(row)
+				
+	def polar_chart(self):
+	
+		#wind_angles = [40, 45, 52, 60, 70, 80, 90, 100, 110, 120, 135, 150, 160, 170, 180]
+		#wind_speeds = [4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 20, 25]
+
+		#set it up to be a half polar
+		fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
+
+		ax.set_thetamin(0)
+		ax.set_thetamax(180)
+		ax.set_theta_zero_location("N")  # theta=0 at the top
+		ax.set_theta_direction(-1)  # theta increasing clockwise
+
+		#ax.set_rticks([0.5, 1, 1.5, 2])  # Less radial ticks
+		#ax.set_rlabel_position(-22.5)  # Move radial labels away from plotted line
+		#ax.grid(True)
+		ax.set_title("Polar Speed Diagram", va='bottom')
+
+		for tws in self.wind_speeds:
+			r = []
+			theta = []
+
+			for twa in self.wind_angles:
+				bsp = self.get_speed(twa, tws)
+
+				if bsp:
+
+					theta.append(math.radians(twa))
+					r.append(bsp)
+
+			if len(r):
+				ax.plot(theta, r, label="TWS: {}".format(tws))
+		
+
+		#give us a nicely spaced set of graphs
+		fig.tight_layout()    
+
+		angle = np.deg2rad(180)
+		#ax.legend(loc="lower left", bbox_to_anchor=(-.7 + np.cos(angle)/2, .5 + np.sin(angle)/2))
+		plt.legend(loc='center right', bbox_to_anchor=(.7 + np.cos(angle)/2, .5 + np.sin(angle)/2))
+		plt.show()
+		
+		plt.clf()
+		plt.close()
+

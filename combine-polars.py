@@ -107,6 +107,9 @@ def main():
 	best_vmg.write_csv("polars/combined-polars-vmg.csv")
 	max_speed.write_predictwind("polars/combined-polars-predictwind.txt")
 	
+	#show our max speed polars!
+	max_speed.polar_chart()
+	
 	#save our legend file.
 	fp = open("polars/combined-polars-legend.csv", 'w')
 	csv_writer = csv.writer(fp)

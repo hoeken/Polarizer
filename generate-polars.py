@@ -348,11 +348,16 @@ def main():
 
 		#finally, clear our graph for the next one
 		plt.clf()
+		plt.close()
+
 
 	#cruncho el numero
 	if args.graph:
 		graph_output_dir = None
 	all_polars = bp.generate_polars(graph_output_dir, max_bsp)
+	
+	#lets make a polar chart!
+	all_polars['mean'].polar_chart()
 	
 	#write our files...
 	for idx, polar in all_polars.items():
