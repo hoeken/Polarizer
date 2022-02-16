@@ -256,6 +256,13 @@ def main():
 		tws_ax.set(ylabel='TWS')
 		tws_ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
 		tws_ax.xaxis.set_minor_formatter(mdates.DateFormatter("%H:%M"))
+
+		#this is to format the x/y info in interactive mode
+		def format_tws(x, y):
+			formatter = mdates.DateFormatter('%Y-%m-%d %H:%M:%S')
+			text = formatter.format_data(x)
+			return "{} TWS: {:.2f}".format(text, y)
+		tws_ax.format_coord = format_tws
 		
 		#this is our TWA portion of the graph
 		twa_index = pd.DatetimeIndex(twa_data.keys())
@@ -279,6 +286,13 @@ def main():
 		twa_ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
 		twa_ax.xaxis.set_minor_formatter(mdates.DateFormatter("%H:%M"))
 
+		#this is to format the x/y info in interactive mode
+		def format_twa(x, y):
+			formatter = mdates.DateFormatter('%Y-%m-%d %H:%M:%S')
+			text = formatter.format_data(x)
+			return "{} TWA: {}".format(text, round(y))
+		twa_ax.format_coord = format_twa
+
 		#this is our BSP portion of the graph
 		bsp_index = pd.DatetimeIndex(bsp_data.keys())
 		bsp_df = pd.DataFrame({'time': bsp_index, 'bsp': bsp_data}, index=bsp_index)
@@ -301,6 +315,13 @@ def main():
 		bsp_ax.xaxis.set_major_formatter(mdates.DateFormatter("%H:%M"))
 		bsp_ax.xaxis.set_minor_formatter(mdates.DateFormatter("%H:%M"))
 
+		#this is to format the x/y info in interactive mode
+		def format_bsp(x, y):
+			formatter = mdates.DateFormatter('%Y-%m-%d %H:%M:%S')
+			text = formatter.format_data(x)
+			return "{} BSP: {:.2f}".format(text, y)
+		bsp_ax.format_coord = format_bsp
+		
 		#auto format our date ticks.
 		plt.setp(tws_ax.get_xticklabels(), rotation=0, horizontalalignment='center', fontsize=6)
 		plt.setp(twa_ax.get_xticklabels(), rotation=0, horizontalalignment='center', fontsize=6)
