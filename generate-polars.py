@@ -34,13 +34,15 @@ import matplotlib.pyplot as plt
 
 def main():
 	#these are our command line arguments
-	parser = argparse.ArgumentParser()
-	parser.add_argument('-f', '--file', action='store')
-	parser.add_argument('-d', '--dir', action='store')
-	parser.add_argument('-p', '--polar', action='store')
-	parser.add_argument('-g', '--graph', default=False, action='store_true')
-	parser.add_argument('--twa_min', action='store', default = 0, type=float)
-	parser.add_argument('--twa_max', action='store', default = 180, type=float)
+	parser = argparse.ArgumentParser(description='Parse a NMEA0183 log file and generate polars.')
+	parser.add_argument('-f', '--file', action='store', help='Filename to parse, for parsing individual files, usually for debug.')
+	parser.add_argument('-p', '--polar', action='store', help='Sailset configuration name. Not needed if parsing a directory.')
+	parser.add_argument('-d', '--dir', action='store', help='Directory to parse.  Will use name of directory as sailset configuration name.')
+	parser.add_argument('-g', '--graph', default=False, action='store_true', help="Show interactive graph. Will always automatically generate .png graph images.")
+	#parser.add_argument('--twa_min', action='store', default = 0, type=float, help="Minimum TWA to generate polars for.")
+	#parser.add_argument('--twa_max', action='store', default = 180, type=float, help="Maximum TWA to generate polars for.")
+	#parser.add_argument('--tws_min', action='store', default = 0, type=float, help="Minimum TWS to generate polars for.")
+	#parser.add_argument('--tws_max', action='store', default = 35, type=float, help="Maximum TWS to generate polars for.")
 
 	args = parser.parse_args()
 	

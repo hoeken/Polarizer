@@ -26,10 +26,10 @@ from pprint import pprint
 def main():
     
 	#these are our command line arguments
-	parser = argparse.ArgumentParser()
-	parser.add_argument('-i', '--ip', action='store', default='192.168.50.20')
-	parser.add_argument('-p', '--port', action='store', default='10110')
-	parser.add_argument('-c', '--config', action='store', default='default')
+	parser = argparse.ArgumentParser(description='Log NMEA0183 data from a server to a text file.')
+	parser.add_argument('-i', '--ip', action='store', default='192.168.50.20', help='IP Address of the NMEA0183 server')
+	parser.add_argument('-p', '--port', action='store', default='10110', help='Port of the NMEA0183 server')
+	parser.add_argument('-c', '--config', action='store', default='default', help='Sail configuration.  Can be any arbitrary text.  eg. "jib and main", "spinnaker", etc.')
     
 	args = parser.parse_args()
 

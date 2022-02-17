@@ -28,14 +28,14 @@ import boatpolar
 
 def main():
 	#these are our command line arguments
-	parser = argparse.ArgumentParser()
-	parser.add_argument('-a', action='store')
-	parser.add_argument('-b', action='store')
-	parser.add_argument('-c', action='store')
-	parser.add_argument('-d', action='store')
-	parser.add_argument('-e', action='store')
-	parser.add_argument('-f', action='store')
-	parser.add_argument('-g', '--graph', default=False, action='store_true')
+	parser = argparse.ArgumentParser(description='Combine multiple polars into a single "best of sailset" polar.')
+	parser.add_argument('-a', action='store', help="Sailset A. Must correspond to sailset name from logging and generation.")
+	parser.add_argument('-b', action='store', help="Sailset B. Must correspond to sailset name from logging and generation.")
+	parser.add_argument('-c', action='store', help="Sailset C. Must correspond to sailset name from logging and generation.")
+	parser.add_argument('-d', action='store', help="Sailset D. Must correspond to sailset name from logging and generation.")
+	parser.add_argument('-e', action='store', help="Sailset E. Must correspond to sailset name from logging and generation.")
+	parser.add_argument('-f', action='store', help="Sailset F. Must correspond to sailset name from logging and generation.")
+	parser.add_argument('-g', '--graph', default=False, action='store_true', help="Show interactive polar chart graph.")
 	
 	args = parser.parse_args()
 

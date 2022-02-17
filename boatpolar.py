@@ -27,16 +27,9 @@ import matplotlib.pyplot as plt
 
 class BoatPolar:
 
-	#tws = None
-	#twa = None
-	#wind_time = 0
-	
-	#sog = None
-	#speed_time = 0
-	
 	#hoeken's standard...
 	wind_angles = [30, 40, 45, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180]
-	wind_speeds = [4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 20, 25]
+	wind_speeds = [4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 20, 25, 30]
 
 	#VPP from DuToit...
 	#wind_angles = [40, 45, 52, 60, 70, 80, 90, 100, 110, 120, 135, 150, 160, 170, 180]
