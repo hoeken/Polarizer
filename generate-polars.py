@@ -168,12 +168,12 @@ def main():
 					if 'tws' in output and 'twa' in output:
 						twa = float(output['twa'])
 						tws = float(output['tws'])
-						if (twa < args.twa_min):
-							print("Less than {} TWA ({}) at {}".format(args.twa_min, twa, output['time']))
-							continue
-						if (twa > args.twa_max):
-							print("Greater than {} TWA ({}) at {}".format(args.twa_max, twa, output['time']))
-							continue
+						#if (twa < args.twa_min):
+						#	print("Less than {} TWA ({}) at {}".format(args.twa_min, twa, output['time']))
+						#	continue
+						#if (twa > args.twa_max):
+						#	print("Greater than {} TWA ({}) at {}".format(args.twa_max, twa, output['time']))
+						#	continue
 							
 						twa_list.append(twa)
 						tws_list.append(tws)
