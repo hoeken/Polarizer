@@ -262,9 +262,9 @@ class BoatPolar:
 		for t in range(0, 181, 15):
 		#for t in self.wind_angles:
 			ticks.append(math.radians(t))
-		ax.set_xticks(ticks)  # Less radial ticks
+		ax.set_xticks(ticks)
 
-		ax.set_title("Polar Speed Diagram", va='bottom')
+		ax.set_title("Polar Speed Diagram")
 
 		for tws in self.wind_speeds:
 			r = []
