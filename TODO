@@ -1,4 +1,7 @@
 TODO:
 
+* Add name of the polar to the graph
+* Make polar graph a little bit prettier
+
 * write an interpolation utility script to change from one set of polar ranges to another
 * data entry on VPPs from dutoit

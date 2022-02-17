@@ -35,7 +35,8 @@ def main():
 	parser.add_argument('-d', action='store')
 	parser.add_argument('-e', action='store')
 	parser.add_argument('-f', action='store')
-
+	parser.add_argument('-g', '--graph', default=False, action='store_true')
+	
 	args = parser.parse_args()
 
 	categories = {}
@@ -108,7 +109,7 @@ def main():
 	max_speed.write_predictwind("polars/combined-polars-predictwind.txt")
 	
 	#show our max speed polars!
-	max_speed.polar_chart()
+	max_speed.polar_chart(args.graph, "graphs/combined-polar-chart.png")
 	
 	#save our legend file.
 	fp = open("polars/combined-polars-legend.csv", 'w')

@@ -20,6 +20,7 @@ import numpy
 import csv
 import math
 from pprint import pprint
+import os
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -34,12 +35,12 @@ class BoatPolar:
 	#speed_time = 0
 	
 	#hoeken's standard...
-	#wind_angles = [40, 45, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180]
-	#wind_speeds = [4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30]
+	wind_angles = [30, 40, 45, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180]
+	wind_speeds = [4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 20, 25]
 
 	#VPP from DuToit...
-	wind_angles = [40, 45, 52, 60, 70, 80, 90, 100, 110, 120, 135, 150, 160, 170, 180]
-	wind_speeds = [4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 20, 25]
+	#wind_angles = [40, 45, 52, 60, 70, 80, 90, 100, 110, 120, 135, 150, 160, 170, 180]
+	#wind_speeds = [4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 20, 25]
 
 	def __init__(self):
 		self.bins = {}
@@ -196,6 +197,11 @@ class BoatPolar:
 
 	def write_csv(self, filename, polars = None):
 
+		#we need our container folder
+		mydir = os.path.dirname(filename)
+		if not os.path.exists(mydir):
+			os.makedirs(mydir)
+
 		if polars is None:
 			polars = self.polar
 			
@@ -216,6 +222,11 @@ class BoatPolar:
 		
 	def write_predictwind(self, filename):	
 
+		#we need our container folder
+		mydir = os.path.dirname(filename)
+		if not os.path.exists(mydir):
+			os.makedirs(mydir)
+
 		with open(filename, 'w') as f:
 			
 			csv_writer = csv.writer(f, dialect='excel-tab')
@@ -231,10 +242,12 @@ class BoatPolar:
 						row.append(0.0)
 				csv_writer.writerow(row)
 				
-	def polar_chart(self):
+	def polar_chart(self, show_graph = False, output_filename = False):
 	
-		#wind_angles = [40, 45, 52, 60, 70, 80, 90, 100, 110, 120, 135, 150, 160, 170, 180]
-		#wind_speeds = [4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 20, 25]
+		#we need our container folder
+		mydir = os.path.dirname(output_filename)
+		if not os.path.exists(mydir):
+			os.makedirs(mydir)
 
 		#set it up to be a half polar
 		fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
@@ -244,9 +257,13 @@ class BoatPolar:
 		ax.set_theta_zero_location("N")  # theta=0 at the top
 		ax.set_theta_direction(-1)  # theta increasing clockwise
 
-		#ax.set_rticks([0.5, 1, 1.5, 2])  # Less radial ticks
-		#ax.set_rlabel_position(-22.5)  # Move radial labels away from plotted line
-		#ax.grid(True)
+		#set our angle ticks
+		ticks = []
+		for t in range(0, 181, 15):
+		#for t in self.wind_angles:
+			ticks.append(math.radians(t))
+		ax.set_xticks(ticks)  # Less radial ticks
+
 		ax.set_title("Polar Speed Diagram", va='bottom')
 
 		for tws in self.wind_speeds:
@@ -271,7 +288,15 @@ class BoatPolar:
 		angle = np.deg2rad(180)
 		#ax.legend(loc="lower left", bbox_to_anchor=(-.7 + np.cos(angle)/2, .5 + np.sin(angle)/2))
 		plt.legend(loc='center right', bbox_to_anchor=(.7 + np.cos(angle)/2, .5 + np.sin(angle)/2))
-		plt.show()
+
+		#okay, actually save
+		if output_filename:
+			plt.savefig(output_filename, bbox_inches='tight', dpi=600)
+			print("Writing polar chart to {}".format(output_filename))
+
+		#do we want to show it?
+		if show_graph:
+			plt.show()
 		
 		plt.clf()
 		plt.close()

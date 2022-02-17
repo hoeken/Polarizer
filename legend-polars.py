@@ -31,7 +31,8 @@ def main():
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-l', '--legend', action='store', required=True)
 	parser.add_argument('-s', '--sailset', action='store', required=True)
-
+	parser.add_argument('-g', '--graph', default=False, action='store_true')
+	
 	args = parser.parse_args()
 
 	polars = {}
@@ -97,6 +98,9 @@ def main():
 	#write our combined files
 	max_speed.write_csv("polars/legend-polars-speed.csv")
 	max_speed.write_predictwind("polars/legend-polars-predictwind.csv")
+
+	#show our max speed polars!
+	max_speed.polar_chart(args.graph, "graphs/legend-polar-chart.png")
 	
 	print("Finished combining polars based on legend.")
 			

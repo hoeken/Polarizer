@@ -329,22 +329,23 @@ def main():
 
     	#give us a nicely spaced set of graphs
 		fig.tight_layout()    
+
+		#where to save it?
+		file_parts = os.path.split(myfile)
+		category = os.path.basename(file_parts[0])
+		graph_output_dir = "graphs/{}".format(category)
+
+		if not os.path.exists(graph_output_dir):
+			os.makedirs(graph_output_dir)
+			
+		#okay, actually save
+		graph_output_file = "{}/data-{}.png".format(graph_output_dir, file_parts[1])
+		plt.savefig(graph_output_file, bbox_inches='tight', dpi=600)
+		print("Writing data graph to {}".format(graph_output_file))
     
 		#do we want to show the interactive one?
 		if args.graph:
 			plt.show()
-		else:
-			#where to save it?
-			file_parts = os.path.split(myfile)
-			category = os.path.basename(file_parts[0])
-			graph_output_dir = "graphs/{}".format(category)
-
-			if not os.path.exists(graph_output_dir):
-				os.makedirs(graph_output_dir)
-				
-			#okay, actually save
-			graph_output_file = "{}/data-{}.png".format(graph_output_dir, file_parts[1])
-			plt.savefig(graph_output_file, bbox_inches='tight', dpi=600)
 
 		#finally, clear our graph for the next one
 		plt.clf()
@@ -357,7 +358,14 @@ def main():
 	all_polars = bp.generate_polars(graph_output_dir, max_bsp)
 	
 	#lets make a polar chart!
-	all_polars['mean'].polar_chart()
+	polar_graph_file = False
+	if args.dir:
+		polar_graph_file = "graphs/{}/polar-chart.png".format(category)
+	elif args.file:
+		polar_graph_file = "graphs/{}/polar-chart-{}.png".format(category, os.path.basename(args.file))
+
+	all_polars['mean'].polar_chart(args.graph, polar_graph_file)
+	
 	
 	#write our files...
 	for idx, polar in all_polars.items():
