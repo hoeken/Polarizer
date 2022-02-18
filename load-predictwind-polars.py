@@ -23,18 +23,21 @@ import numpy
 import csv
 import math
 from pprint import pprint
-import nmea0183
 import boatpolar
+
+import pandas as pd
+import numpy as np
 
 def main():
 	#these are our command line arguments
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-f', '--file', action='store', required=True)
-
+	parser.add_argument('-g', '--graph', default=False, action='store_true', help="Show interactive graph. Will always automatically generate .png graph images.")
+	
 	args = parser.parse_args()
 	
 	output = boatpolar.BoatPolar()
-	pw_polars = {}
+	tws_data = []
 
 	#did we get a real legend?
 	if not os.path.isfile(args.file):
@@ -46,59 +49,38 @@ def main():
 
 	#loop thru our predict wind file
 	for row in reader:
-		pw_tws = int(row[0])
+		twa_data = []
+		bsp_data = []
 		data = row[1:]
+		tws = row[0]
 		
 		#each line is TWS with TWA/BSP pairs:
-		twa_lines = {}
-		for i in range(len(data)/2):
-			pw_twa = int(data[0+i*2])
-			pw_bsp = float(data[1+i*2])
+		for i in range(int(len(data)/2)):
+			twa = int(data[0+i*2])
+			bsp = float(data[1+i*2])
 			
-			twa_lines[pw_twa] = pw_bsp
-			
-		pw_polars[pw_tws] = twa_lines
+			twa_data.append(twa)
+			bsp_data.append(bsp)
+
+		#load our dataframe
+		pw_df = pd.DataFrame({'bsp': bsp_data}, index=twa_data)
 		
-	pprint(pw_polars)
+		#interpolate		
+		df_out = pd.DataFrame(index=output.wind_angles)
+		df_out.index.name = pw_df.index.name
+		for colname, col in pw_df.items():
+			df_out[colname] = np.round(np.interp(output.wind_angles, pw_df.index, col), 2)
 
-	for my_tws in output.wind_speeds:
-		if pw_polars.has_key(my_tws):
-			twa_lines = pw_polars[my_tws]
-			for my_twa in output.wind_angles:
-				if twa_lines.has_key(my_twa):
-					my_bsp = twa_lines[my_twa]
-				else:
-					#start = 0
-					#end = output.wind_angles[0]
-
-					#for i in range(len(output.wind_angles)-1):
-					#	if pw_twa > output.wind_angles[i] and pw_twa < output.wind_angles[i+1]:
-					#		start = output.wind_angles[i]
-					#		end = output.wind_angles[i+1]
-					#		break
-						
-				output.set_speed(my_twa, my_tws, my_bsp)
-
-		#is this twa already in our list?
-		#if pw_twa in output.wind_angles:
-		#	my_bsp = pw_bsp
-		#nope, figure out which one its between
-		#else:
-		#	start = 0
-		#	end = output.wind_angles[0]
-
-			#for i in range(len(output.wind_angles)-1):
-			#	if pw_twa > output.wind_angles[i] and pw_twa < output.wind_angles[i+1]:
-			#		start = output.wind_angles[i]
-			#		end = output.wind_angles[i+1]
-			#		break
-					
-		#	print ("{} {} {} {} {}".format(pw_tws, pw_twa, pw_bsp, start, end))
-				
-	#write our combined files
-	output.write_csv("polars/predictwind-converted.csv")
+		#save to our polar
+		for twa, bsp in df_out['bsp'].items():
+			output.set_speed(twa, tws, bsp)
 	
-	print("Finished loading Predictwind polars")
+	#write our combined files
+	output.polar_chart(args.graph, "graphs/predictwind-polar.png", "{} Polar".format(args.file))
+	output.write_csv("polars/predictwind-converted.csv")
+	print("Writing polar to polars/predictwind-converted.csv")
+	
+	print("Finished interpolating Predictwind polars")
 			
 if __name__ == '__main__':
 	main()
