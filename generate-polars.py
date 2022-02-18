@@ -39,6 +39,7 @@ def main():
 	parser.add_argument('-p', '--polar', action='store', help='Sailset configuration name. Not needed if parsing a directory.')
 	parser.add_argument('-d', '--dir', action='store', help='Directory to parse.  Will use name of directory as sailset configuration name.')
 	parser.add_argument('-g', '--graph', default=False, action='store_true', help="Show interactive graph. Will always automatically generate .png graph images.")
+	parser.add_argument('--filter', default='butter', help="What kind of filter to use. 'rolling' = Rolling 10s average.  'butter' = Butterworth filter. 'none' = No Filter.")
 	#parser.add_argument('--twa_min', action='store', default = 0, type=float, help="Minimum TWA to generate polars for.")
 	#parser.add_argument('--twa_max', action='store', default = 180, type=float, help="Maximum TWA to generate polars for.")
 	#parser.add_argument('--tws_min', action='store', default = 0, type=float, help="Minimum TWS to generate polars for.")
@@ -95,21 +96,19 @@ def main():
 		
 	#loop through all our data files
 	for myfile in files:
+		#our arrays
+		twa_data = []
+		tws_data = []
+		bsp_data = []
+		
+		twa_time = []
+		tws_time = []
+		bsp_time = []
 	
-		#init our arrays
-		twa_list = []
-		tws_list = []
-		bsp_list = []
-		wind_time = 0
-		bsp_time = 0
-
-		#this is for graphing... probably a better way to do this.
-		tws_data = {}
-		tws_avg_data = {}
-		twa_data = {}
-		twa_avg_data = {}
-		bsp_data = {}
-		bsp_avg_data = {}
+		#our data series
+		#twa_ds = pd.Series(dtype='float')
+		#tws_ds = pd.Series(dtype='float')
+		#bsp_ds = pd.Series(dtype='float')
 
 		#open our file for reading
 		print("Parsing file {}".format(myfile))
@@ -133,7 +132,16 @@ def main():
 					# run it through our parser
 					nmea = nmea0183.nmea0183()
 					output = nmea.parseline(line)
-				
+
+					#only use ones that have the unix time now.
+					if 'unix_time' in data:
+						#just use the unix timestamp - fast, but we lose timezone info.
+						unix_time = float(data['unix_time'])
+						pd_time = datetime.datetime.fromtimestamp(unix_time)
+					else:
+						#convert the human timestamp - needed if you want to edit the data
+						pd_time = pd.to_datetime(data['time'])
+					
 					#lets only parse valid strings
 					if not nmea.valid:
 						#print(line)
@@ -143,115 +151,126 @@ def main():
 					if not nmea.known:
 						#pprint(output)
 						continue
-						
-					#when did we record this?
-					output['time'] = data['time']
-
-					#oh sweet sweet unix epoch
-					#if 'unix_time' in data:
-					#	unix_time = data['unix_time']
-					#fucking date times.... old log entries didnt have the unix_time variable
-					#else:
-					ts = datetime.datetime.strptime(output['time'][0:19], "%Y-%m-%dT%H:%M:%S")
-					unix_time = time.mktime(ts.timetuple())
-					micros = output['time'][19:]
-					if micros != '':
-						micros = float(micros)
-					else:
-						micros = 0.0
-					unix_time += micros
-
-					#need this later
-					timestamp = datetime.datetime.fromtimestamp(unix_time)
 
 					#wind speed...
 					if 'tws' in output and 'twa' in output:
 						twa = float(output['twa'])
 						tws = float(output['tws'])
-						#if (twa < args.twa_min):
-						#	print("Less than {} TWA ({}) at {}".format(args.twa_min, twa, output['time']))
-						#	continue
-						#if (twa > args.twa_max):
-						#	print("Greater than {} TWA ({}) at {}".format(args.twa_max, twa, output['time']))
-						#	continue
-							
-						twa_list.append(twa)
-						tws_list.append(tws)
-						wind_time = unix_time
-						
-						tws_data[timestamp] = tws
-						twa_data[timestamp] = twa
+
+						twa_data.append({'time': pd_time, 'data': twa})
+						tws_data.append({'time': pd_time, 'data': tws})
 							
 					#boat speed... use SOG
 					if use_sog:
 						if 'sog' in output and nmea.sentence == 'RMC' and output['sog']:
 							bsp = float(output['sog'])
-							bsp_list.append(bsp)
-							bsp_time = unix_time
-							bsp_data[timestamp] = bsp
+							bsp_data.append({'time': pd_time, 'data': bsp})
+					#or otherwise use BSP
 					else:
 						if 'water_speed' in output and nmea.sentence == 'VHW' and output['water_speed']:
 							bsp = float(output['water_speed'])
-							bsp_list.append(bsp)
-							bsp_time = unix_time
-							bsp_data[timestamp] = bsp
+							bsp_data.append({'time': pd_time, 'data': bsp})
 
-					#limit our running average arrays
-					while len(twa_list) > running_avg_count:
-						twa_list.pop(0)
-					while len(tws_list) > running_avg_count:
-						tws_list.pop(0)
-					while len(bsp_list) > running_avg_count:
-						bsp_list.pop(0)
-
-					#add this to the list...
-					time_delta = abs(wind_time - bsp_time)
-					if wind_time > 0 and bsp_time > 0 and time_delta <= 1:
-						avg_twa = numpy.average(twa_list)
-						avg_tws = numpy.average(tws_list)
-						avg_bsp = numpy.average(bsp_list)
-						
-						max_bsp = max(max_bsp, avg_bsp)
-						
-						tws_avg_data[timestamp] = round(avg_tws, 2)
-						twa_avg_data[timestamp] = round(avg_twa, 2)
-						bsp_avg_data[timestamp] = round(avg_bsp, 2)
-
-						#print("TWA: {} TWS: {} BSP: {}".format(round(avg_twa), round(avg_tws, 2), round(avg_bsp, 2)))
-
-						bp.bin_speeds(avg_twa, avg_tws, avg_bsp)
-						#bp.bin_speeds(twa_list[0], tws_list[0], bsp_list[0])
-						
-						wind_time = 0
-						bsp_time = 0
 			else:
 				print ("Empty lines...")
 
 		fp.close()	
 		
+		if not len(twa_data) or not len(tws_data) or not len(bsp_data):
+			print("No data in file.")
+			continue
+			
+		#make our dataframes		
+		twa_pd = pd.DataFrame.from_records(twa_data, index='time')
+		tws_pd = pd.DataFrame.from_records(tws_data, index='time')
+		bsp_pd = pd.DataFrame.from_records(bsp_data, index='time')
+
+		#convert it to a series.
+		twa_ds = twa_pd.squeeze()
+		tws_ds = tws_pd.squeeze()
+		bsp_ds = bsp_pd.squeeze()
+
+		#what was our max boat speed?
+		max_bsp = bsp_ds.max()
+
+		#do our rolling average
+		twa_rolling = twa_ds.rolling('10s', center=True).mean()
+		tws_rolling = tws_ds.rolling('10s', center=True).mean()
+		bsp_rolling = bsp_ds.rolling('10s', center=True).mean()
+
+		#do our butterworth filter
+		b = signal.butter(3, 0.10, analog=False)
+
+		fd = signal.filtfilt(*b, twa_ds.array, padtype='constant')
+		twa_butter = pd.Series(data=fd, index=twa_ds.index)
+
+		fd = signal.filtfilt(*b, tws_ds.array, padtype='constant')
+		tws_butter = pd.Series(data=fd,index=tws_ds.index)
+
+		fd = signal.filtfilt(*b, bsp_ds.array, padtype='constant')
+		bsp_butter = pd.Series(data=fd,index=bsp_ds.index)
+
+		#do we want a rolling 10s filter?
+		if args.filter == 'rolling':
+			twa_filt = twa_rolling
+			tws_filt = tws_rolling
+			bsp_filt = bsp_rolling
+		#do we want a buttery filter?
+		elif args.filter == 'butter':
+			twa_filt = twa_butter
+			tws_filt = tws_butter
+			bsp_filt = bsp_butter
+		#or just the raw data?
+		else:
+			twa_filt = twa_ds
+			tws_filt = tws_ds
+			bsp_filt = bsp_ds
+
+		#resample to give us regular data every second
+		twa_final = twa_filt.resample('1s').mean()
+		tws_final = tws_filt.resample('1s').mean()
+		bsp_final = bsp_filt.resample('1s').mean()
+
+		#print("Raw Data")
+		#print(bsp_ds)
+		#print(bsp_ds.describe())
+		
+		#print("Filtered")
+		#print(bsp_filt)
+		#print(bsp_filt.describe())
+
+		#print("Resampled")
+		#print(bsp_final)
+		#print(bsp_final.describe())
+		
+		#okay, now bin all of our data
+		for time, bsp in bsp_final.items():
+			twa = twa_final.get(time)
+			tws = tws_final.get(time)
+
+			#print("[{}] TWA: {} TWS: {} BSP: {}".format(time, twa, tws, bsp))
+
+			#make sure we got all 3 values and they are valid
+			if twa and tws and not math.isnan(twa) and not math.isnan(tws) and not math.isnan(bsp):
+				bp.bin_speeds(twa, tws, bsp)
+
+		#
+		# Graphs below
+		#
+				
 		scatter_size = 1
-		line_size = 0.3
+		line_size = 0.5
 		
 		#reset our graph.
 		#plt.figure()
 		fig, (twa_ax, tws_ax, bsp_ax) = plt.subplots(3)
-		fig.suptitle("{} ({} Points)".format(os.path.basename(myfile), len(tws_data)))
+		fig.suptitle("{} ({} Points)".format(os.path.basename(myfile), len(tws_ds.index)))
 
-		#this is our TWS portion of the graph
-		tws_index = pd.DatetimeIndex(tws_data.keys())
-		tws_df = pd.DataFrame({'time': tws_index, 'tws': tws_data}, index=tws_index)
-		tws_avg_index = pd.DatetimeIndex(tws_avg_data.keys())
-		tws_avg_df = pd.DataFrame({'time': tws_avg_index, 'tws': tws_avg_data}, index=tws_avg_index)
-
-		#raw data as a scatterplot
-		x = tws_df['time']
-		y = tws_df['tws']
-		tws_ax.scatter(x, y, s=scatter_size, c='#00bf00', label='Raw', marker='.', linewidth=0)
-
-		#average as a line plot
-		x = tws_avg_df['time']
-		y = tws_avg_df['tws']
-		tws_ax.plot(x, y, c='black', label='Average', linewidth=line_size)
+		#plot our data
+		tws_ds.plot(ax=tws_ax, c='#00bf00', label='Raw', marker='.', markersize=scatter_size, linewidth=0, linestyle='None', markeredgewidth=0)
+		tws_rolling.plot(ax=tws_ax, c='orange', label='Rolling', linewidth=line_size)
+		tws_butter.plot(ax=tws_ax, c='purple', label='Filtered', linewidth=line_size)
+		tws_final.plot(ax=tws_ax, c='black', label='Resampled', linewidth=line_size)
 
 		#show 0kts as base
 		tws_ax.set_ylim([0, None])
@@ -266,21 +285,11 @@ def main():
 			return "{} TWS: {:.2f}".format(text, y)
 		tws_ax.format_coord = format_tws
 		
-		#this is our TWA portion of the graph
-		twa_index = pd.DatetimeIndex(twa_data.keys())
-		twa_df = pd.DataFrame({'time': twa_index, 'twa': twa_data}, index=twa_index)
-		twa_avg_index = pd.DatetimeIndex(twa_avg_data.keys())
-		twa_avg_df = pd.DataFrame({'time': twa_avg_index, 'twa': twa_avg_data}, index=twa_avg_index)
-
-		#raw data as a scatterplot
-		x = twa_df['time']
-		y = twa_df['twa']
-		twa_ax.scatter(x, y, s=scatter_size, c='#bf0000', label='Raw', marker='.', linewidth=0)
-
-		#average as a line plot
-		x = twa_avg_df['time']
-		y = twa_avg_df['twa']
-		twa_ax.plot(x, y, c='black', label='Average', linewidth=line_size)
+		#plot our data
+		twa_ds.plot(ax=twa_ax, c='#bf0000', label='Raw', marker='.', markersize=scatter_size, linewidth=0, linestyle='None', markeredgewidth=0)
+		twa_rolling.plot(ax=twa_ax, c='orange', label='Rolling', linewidth=line_size)
+		twa_butter.plot(ax=twa_ax, c='purple', label='Filtered', linewidth=line_size)
+		twa_final.plot(ax=twa_ax, c='black', label='Resampled', linewidth=line_size)
 
 		#show 0kts as base
 		twa_ax.set_ylim([0, None])
@@ -295,21 +304,11 @@ def main():
 			return "{} TWA: {}".format(text, round(y))
 		twa_ax.format_coord = format_twa
 
-		#this is our BSP portion of the graph
-		bsp_index = pd.DatetimeIndex(bsp_data.keys())
-		bsp_df = pd.DataFrame({'time': bsp_index, 'bsp': bsp_data}, index=bsp_index)
-		bsp_avg_index = pd.DatetimeIndex(bsp_avg_data.keys())
-		bsp_avg_df = pd.DataFrame({'time': bsp_avg_index, 'bsp': bsp_avg_data}, index=bsp_avg_index)
-
-		#raw data as a scatterplot
-		x = bsp_df['time']
-		y = bsp_df['bsp']
-		bsp_ax.scatter(x, y, s=scatter_size, c='#0000bf', label='Raw', marker='.', linewidth=0)
-
-		#average as a line plot
-		x = bsp_avg_df['time']
-		y = bsp_avg_df['bsp']
-		bsp_ax.plot(x, y, c='black', label='Average', linewidth=line_size)
+		#plot our data
+		bsp_ds.plot(ax=bsp_ax, c='#0000bf', label='Raw', marker='.', markersize=scatter_size, linewidth=0, linestyle='None', markeredgewidth=0)
+		bsp_rolling.plot(ax=bsp_ax, c='orange', label='Rolling', linewidth=line_size)
+		bsp_butter.plot(ax=bsp_ax, c='purple', label='Filtered', linewidth=line_size)
+		bsp_final.plot(ax=bsp_ax, c='black', label='Resampled', linewidth=line_size)
 
 		#show 0kts as base
 		bsp_ax.set_ylim([0, None])
@@ -366,8 +365,8 @@ def main():
 	elif args.file:
 		polar_graph_file = "graphs/{}/polar-chart-{}.png".format(category, os.path.basename(args.file))
 
-	all_polars['mean'].polar_chart(args.graph, polar_graph_file)
 	
+	all_polars['mean'].polar_chart(args.graph, polar_graph_file)
 	
 	#write our files...
 	for idx, polar in all_polars.items():
@@ -377,4 +376,3 @@ def main():
 
 if __name__ == '__main__':
 	main()
-    

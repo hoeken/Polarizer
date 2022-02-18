@@ -29,11 +29,11 @@ class BoatPolar:
 
 	#hoeken's standard...
 	#wind_angles = [30, 40, 45, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180]
-	#wind_speeds = [4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 20, 25, 30]
+	#wind_speeds = [4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 20, 25, 30, 35, 40]
 
 	#VPP from DuToit...
 	wind_angles = [40, 45, 52, 60, 70, 80, 90, 100, 110, 120, 135, 150, 160, 170, 180]
-	wind_speeds = [4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 20, 25, 30]
+	wind_speeds = [4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 20, 25, 30, 35, 40]
 
 	def __init__(self):
 		self.bins = {}
@@ -117,8 +117,8 @@ class BoatPolar:
 		
 		polars = {}
 		polars['mean'] = BoatPolar()
-		polars['median'] = BoatPolar()
-		polars['diff'] = BoatPolar()
+		#polars['median'] = BoatPolar()
+		#polars['diff'] = BoatPolar()
 		polars['count'] = BoatPolar()
 		polars['stddev'] = BoatPolar()
 		polars['vmg'] = BoatPolar()
@@ -153,8 +153,8 @@ class BoatPolar:
 
 					#record our results
 					polars['mean'].set_speed(angle, speed, bin_mean)
-					polars['median'].set_speed(angle, speed, bin_median)
-					polars['diff'].set_speed(angle, speed, bin_diff)
+					#polars['median'].set_speed(angle, speed, bin_median)
+					#polars['diff'].set_speed(angle, speed, bin_diff)
 					polars['count'].set_speed(angle, speed, bin_count)
 					polars['stddev'].set_speed(angle, speed, bin_stddev)
 					polars['vmg'].set_speed(angle, speed, bin_vmg)

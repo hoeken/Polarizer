@@ -4,7 +4,7 @@ TODO:
 * Make polar graph a little bit prettier
 * Add tws min/max to polar generation stuff.
 * Verify that twa min/max is working properly.
-* re-investigate filters and update to use them in generate-polars.py
+* fix scatterplot drawing
 
 * write an interpolation utility script to change from one set of polar ranges to another
 * data entry on VPPs from dutoit
