@@ -113,6 +113,25 @@ class BoatPolar:
 					self.set_speed(twa, tws, boat_speed)
 			i += 1
 
+	def calculate_vmg(self):
+		vmg_polar = BoatPolar()
+		for tws in self.wind_speeds:
+			for twa in self.wind_angles:
+				bsp = self.get_speed(twa, tws)
+				
+				if bsp:
+					#calculate our up/downwind vmg
+					if twa > 90:
+						vmg = math.cos(math.radians(180 - twa)) * bsp
+					else:
+						vmg = math.cos(math.radians(twa)) * bsp
+					vmg = round(vmg, 2)
+
+					vmg_polar.set_speed(twa, tws, vmg)
+		
+		return vmg_polar
+
+
 	def generate_polars(self, graph_dir=None, max_bsp=15):
 		
 		polars = {}
@@ -121,7 +140,6 @@ class BoatPolar:
 		#polars['diff'] = BoatPolar()
 		polars['count'] = BoatPolar()
 		polars['stddev'] = BoatPolar()
-		polars['vmg'] = BoatPolar()
 		
 		for speed in self.wind_speeds:
 			for angle in self.wind_angles:
@@ -144,20 +162,12 @@ class BoatPolar:
 					bin_mean = bin_filtered
 					filtered_count = len(filtered)
 
-					#calculate our up/downwind vmg
-					if angle > 90:
-						bin_vmg = math.cos(math.radians(180 - angle)) * bin_mean
-					else:
-						bin_vmg = math.cos(math.radians(angle)) * bin_mean
-					bin_vmg = round(bin_vmg, 2)
-
 					#record our results
 					polars['mean'].set_speed(angle, speed, bin_mean)
 					#polars['median'].set_speed(angle, speed, bin_median)
 					#polars['diff'].set_speed(angle, speed, bin_diff)
 					polars['count'].set_speed(angle, speed, bin_count)
 					polars['stddev'].set_speed(angle, speed, bin_stddev)
-					polars['vmg'].set_speed(angle, speed, bin_vmg)
 					
 					#where do we graph it to?
 					#some lines
@@ -185,7 +195,10 @@ class BoatPolar:
 
 					plt.clf()
 					plt.close()
-					
+
+		#figure out our vmg
+		polars['vmg'] = polars['mean'].calculate_vmg()
+
 		return polars
 
 	def write_csv(self, filename, polars = None):
@@ -235,7 +248,7 @@ class BoatPolar:
 						row.append(0.0)
 				csv_writer.writerow(row)
 				
-	def polar_chart(self, show_graph = False, output_filename = False):
+	def polar_chart(self, show_graph = False, output_filename = False, title = None):
 	
 		#we need our container folder
 		mydir = os.path.dirname(output_filename)
@@ -257,7 +270,11 @@ class BoatPolar:
 			ticks.append(math.radians(t))
 		ax.set_xticks(ticks)
 
-		ax.set_title("Polar Speed Diagram")
+		#what title?
+		if title is not None:
+			ax.set_title(title)
+		else:
+			ax.set_title("Polar Speed Diagram")
 
 		for tws in self.wind_speeds:
 			r = []
@@ -272,7 +289,7 @@ class BoatPolar:
 					r.append(bsp)
 
 			if len(r):
-				ax.plot(theta, r, label="TWS: {}".format(tws))
+				ax.plot(theta, r, label="{} kts".format(tws), linewidth=1.0)
 		
 
 		#give us a nicely spaced set of graphs
@@ -280,7 +297,7 @@ class BoatPolar:
 
 		angle = np.deg2rad(180)
 		#ax.legend(loc="lower left", bbox_to_anchor=(-.7 + np.cos(angle)/2, .5 + np.sin(angle)/2))
-		plt.legend(loc='center right', bbox_to_anchor=(.7 + np.cos(angle)/2, .5 + np.sin(angle)/2))
+		plt.legend(title="True Wind Speed", loc='center right', bbox_to_anchor=(.7 + np.cos(angle)/2, .5 + np.sin(angle)/2))
 
 		#okay, actually save
 		if output_filename:

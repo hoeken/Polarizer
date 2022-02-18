@@ -36,7 +36,8 @@ def main():
 	parser.add_argument('-e', action='store', help="Sailset E. Must correspond to sailset name from logging and generation.")
 	parser.add_argument('-f', action='store', help="Sailset F. Must correspond to sailset name from logging and generation.")
 	parser.add_argument('-g', '--graph', default=False, action='store_true', help="Show interactive polar chart graph.")
-	
+	parser.add_argument('--name', default=None, action='store', help="Name of your boat")
+		
 	args = parser.parse_args()
 
 	categories = {}
@@ -44,7 +45,6 @@ def main():
 
 	legend = boatpolar.BoatPolar()
 	max_speed = boatpolar.BoatPolar()
-	best_vmg = boatpolar.BoatPolar()
 	polars = {}
 	
 	#just hardcode in 6 configs cause we're lazy
@@ -93,23 +93,23 @@ def main():
 							#save it to our legend and max speed
 							legend.set_speed(twa, tws, key)
 							max_speed.set_speed(twa, tws, boat_speed)
-							
-							#lets make a vmg one for kicks.
-							if twa > 90:
-								vmg = math.cos(math.radians(180 - twa)) * boat_speed
-							else:
-								vmg = math.cos(math.radians(twa)) * boat_speed
-							vmg = round(vmg, 2)
-							best_vmg.set_speed(twa, tws, vmg)
+
+	#generate our vmg too
+	best_vmg = max_speed.calculate_vmg()
 							
 	#write our combined files
 	legend.write_csv("polars/combined-polars-sailset.csv")
 	max_speed.write_csv("polars/combined-polars-speed.csv")
-	best_vmg.write_csv("polars/combined-polars-vmg.csv")
 	max_speed.write_predictwind("polars/combined-polars-predictwind.txt")
+	best_vmg.write_csv("polars/combined-polars-vmg.csv")
 	
 	#show our max speed polars!
-	max_speed.polar_chart(args.graph, "graphs/combined-polar-chart.png")
+	if args.name:
+		title = "{} - Best Sailset Polar Chart".format(args.name)
+	else:
+		title = "Best Sailset Polar Chart".format(args.name)
+	
+	max_speed.polar_chart(args.graph, "graphs/combined-polar-chart.png", title)
 	
 	#save our legend file.
 	fp = open("polars/combined-polars-legend.csv", 'w')

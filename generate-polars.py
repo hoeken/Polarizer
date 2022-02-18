@@ -352,7 +352,6 @@ def main():
 		plt.clf()
 		plt.close()
 
-
 	#cruncho el numero
 	if args.graph:
 		graph_output_dir = None
@@ -362,11 +361,12 @@ def main():
 	polar_graph_file = False
 	if args.dir:
 		polar_graph_file = "graphs/{}/polar-chart.png".format(category)
+		title = "{} Polar Chart".format(category.title())
 	elif args.file:
 		polar_graph_file = "graphs/{}/polar-chart-{}.png".format(category, os.path.basename(args.file))
+		title = "{} Polar Chart".format(os.path.basename(args.file))
 
-	
-	all_polars['mean'].polar_chart(args.graph, polar_graph_file)
+	all_polars['mean'].polar_chart(args.graph, polar_graph_file, title)
 	
 	#write our files...
 	for idx, polar in all_polars.items():
