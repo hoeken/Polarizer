@@ -32,6 +32,8 @@ import numpy as np
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 
+from dateutil import tz
+
 def main():
 	#these are our command line arguments
 	parser = argparse.ArgumentParser(description='Parse a NMEA0183 log file and generate polars.')
@@ -114,6 +116,8 @@ def main():
 		#tws_ds = pd.Series(dtype='float')
 		#bsp_ds = pd.Series(dtype='float')
 
+		local_tz = None
+
 		#open our file for reading
 		print("Parsing file {}".format(myfile))
 		fp = open(myfile)
@@ -141,7 +145,9 @@ def main():
 					if 'unix_time' in data:
 						#just use the unix timestamp - fast, but we lose timezone info.
 						unix_time = float(data['unix_time'])
-						pd_time = datetime.datetime.fromtimestamp(unix_time)
+						local_tz = tz.gettz(data['timezone'])
+						pd_time = datetime.datetime.utcfromtimestamp(data['unix_time'])
+						pd_time = pd_time.replace(tzinfo=local_tz)
 					else:
 						#convert the human timestamp - needed if you want to edit the data
 						pd_time = pd.to_datetime(data['time'])
