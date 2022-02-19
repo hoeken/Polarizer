@@ -59,6 +59,9 @@ class BoatPolar:
 	def set_speed(self, twa, tws, bsp):
 		twa = int(twa)
 		tws = int(tws)
+		
+		if math.isnan(bsp):
+			bsp = 0
 
 		self.polar[tws][twa] = bsp
 

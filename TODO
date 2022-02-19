@@ -1,8 +1,8 @@
 TODO:
 
-* Add interpolation for TWS columns to predictwind script
-* Add AWA and AWS calculations
 * figure out how to handle timezones so files can be trimmed easily
 * write script to convert all old files to timezone aware.
+* Create 'convert tabular polars' script too
+* Add AWA and AWS calculations
 
 * data entry on VPPs from dutoit

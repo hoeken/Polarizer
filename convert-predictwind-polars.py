@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-"""load-predictwind-polars.py
-Loads a predictwind polar file and writes it back out in our format.  Note: may not work since some predictwind polars have variable TWA/TWS pairs and interpolation is not implemented
+"""convert-predictwind-polars.py
+Loads a predictwind polar file and writes it back out in our format.  Will automatically interpolate from variable TWA entries and different TWS columns
 """
 
 __author__ = "Zach Hoeken"
@@ -47,12 +47,14 @@ def main():
 		fp = open(args.file)
 		reader = csv.reader(fp, dialect='excel-tab')
 
+	polar_df = pd.DataFrame(index=output.wind_angles, columns=output.wind_speeds, dtype='float')
+
 	#loop thru our predict wind file
 	for row in reader:
 		twa_data = []
 		bsp_data = []
 		data = row[1:]
-		tws = row[0]
+		tws = int(row[0])
 		
 		#each line is TWS with TWA/BSP pairs:
 		for i in range(int(len(data)/2)):
@@ -65,20 +67,29 @@ def main():
 		#load our dataframe
 		pw_df = pd.DataFrame({'bsp': bsp_data}, index=twa_data)
 		
-		#interpolate		
+		#interpolate each wind speed line
 		df_out = pd.DataFrame(index=output.wind_angles)
 		df_out.index.name = pw_df.index.name
 		for colname, col in pw_df.items():
 			df_out[colname] = np.round(np.interp(output.wind_angles, pw_df.index, col), 2)
 
-		#save to our polar
-		for twa, bsp in df_out['bsp'].items():
+		#save it to our main dataframe
+		polar_df[tws] = df_out['bsp']
+
+	#if the TWS columns dont match up, this will interpolate them.
+	interpolated = polar_df.interpolate(axis='columns')
+
+	#finally, save to our polar.
+	for tws, df_data in interpolated.items():
+		for twa, bsp in df_data.items():
 			output.set_speed(twa, tws, bsp)
-	
+
 	#write our combined files
 	output.polar_chart(args.graph, "graphs/predictwind-polar.png", "{} Polar".format(args.file))
 	output.write_csv("polars/predictwind-converted.csv")
 	print("Writing polar to polars/predictwind-converted.csv")
+	output.calculate_vmg().write_csv("polars/predictwind-vmg.csv")
+	print("Writing vmg to polars/predictwind-vmg.csv")
 	
 	print("Finished interpolating Predictwind polars")
 			
