@@ -28,8 +28,14 @@ import matplotlib.pyplot as plt
 class BoatPolar:
 
 	#hoeken's standard...
-	wind_angles = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180]
-	wind_speeds = [4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 20, 25, 30, 35, 40]
+	wind_angles = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180]
+	wind_speeds = [0, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 20, 25, 30, 35, 40]
+
+	#min/max values
+	twa_min = 0
+	twa_max = 180
+	tws_min = 0
+	tws_max = 40
 
 	#VPP from DuToit...
 	#wind_angles = [40, 45, 52, 60, 70, 80, 90, 100, 110, 120, 135, 150, 160, 170, 180]
@@ -136,65 +142,63 @@ class BoatPolar:
 		
 		polars = {}
 		polars['mean'] = BoatPolar()
-		#polars['median'] = BoatPolar()
-		#polars['diff'] = BoatPolar()
 		polars['count'] = BoatPolar()
 		polars['stddev'] = BoatPolar()
 		
+		#loop through twa/tws
 		for speed in self.wind_speeds:
 			for angle in self.wind_angles:
+				#filter here on twa/tws
+				if speed >= self.tws_min and speed <= self.tws_max and angle >= self.twa_min and angle <= self.twa_max:
+					#get our datapoints
+					mybin = self.bins[speed][angle]
+					if len(mybin) >= 50:
 
-				mybin = self.bins[speed][angle]
-				if len(mybin) >= 50:
+						bin_stddev = round(numpy.std(self.bins[speed][angle]), 3)
+						bin_count = len(mybin)
+						bin_mean = round(numpy.average(self.bins[speed][angle]), 2)
+						bin_median = round(numpy.median(self.bins[speed][angle]), 2)
+						
+						#this is an attempt to filter out major outliers
+						filtered = []
+						for sog in self.bins[speed][angle]:
+							if sog >= bin_median - bin_stddev and sog <= bin_median + bin_stddev:
+								filtered.append(sog)
+						bin_filtered = round(numpy.average(filtered), 2)
+						bin_mean = bin_filtered
+						filtered_count = len(filtered)
 
-					bin_stddev = round(numpy.std(self.bins[speed][angle]), 3)
-					bin_median = round(numpy.median(self.bins[speed][angle]), 2)
-					bin_count = len(mybin)
-					bin_mean = round(numpy.average(self.bins[speed][angle]), 2)
-					bin_diff = round(bin_median - bin_mean, 2)
-					
-					#this is an attempt to filter out major outliers
-					filtered = []
-					for sog in self.bins[speed][angle]:
-						if sog >= bin_median - bin_stddev and sog <= bin_median + bin_stddev:
-							filtered.append(sog)
-					bin_filtered = round(numpy.average(filtered), 2)
-					bin_mean = bin_filtered
-					filtered_count = len(filtered)
+						#record our results
+						polars['mean'].set_speed(angle, speed, bin_mean)
+						polars['count'].set_speed(angle, speed, bin_count)
+						polars['stddev'].set_speed(angle, speed, bin_stddev)
+						
+						#where do we graph it to?
+						#some lines
+						plt.axvline(x=bin_mean, c='red', label="BSP ({})".format(bin_mean), linewidth=0.5, zorder=3, alpha = 0.5)
+						plt.axvspan(bin_mean-bin_stddev, bin_mean+bin_stddev, color='red', linewidth=0, alpha=0.1, zorder=3, label = '+/- 1 Sigma')
 
-					#record our results
-					polars['mean'].set_speed(angle, speed, bin_mean)
-					#polars['median'].set_speed(angle, speed, bin_median)
-					#polars['diff'].set_speed(angle, speed, bin_diff)
-					polars['count'].set_speed(angle, speed, bin_count)
-					polars['stddev'].set_speed(angle, speed, bin_stddev)
-					
-					#where do we graph it to?
-					#some lines
-					plt.axvline(x=bin_mean, c='red', label="BSP ({})".format(bin_mean), linewidth=0.5, zorder=3, alpha = 0.5)
-					plt.axvspan(bin_mean-bin_stddev, bin_mean+bin_stddev, color='red', linewidth=0, alpha=0.1, zorder=3, label = '+/- 1 Sigma')
+						#plot the histogram
+						x = self.bins[speed][angle]
+						plt.hist(x, bins=50, zorder=2)
 
-					#plot the histogram
-					x = self.bins[speed][angle]
-					plt.hist(x, bins=50, zorder=2)
+						#set our titles and axes.
+						title = '{}kts TWS @ {} TWA ({} Total Points)'.format(speed, angle, len(mybin))
+						plt.gca().set(title=title, ylabel='Count');
+						ax = plt.gca()
+						ax.set_xlim([0, 15])
+						plt.legend()
 
-					#set our titles and axes.
-					title = '{}kts TWS @ {} TWA ({} Total Points)'.format(speed, angle, len(mybin))
-					plt.gca().set(title=title, ylabel='Count');
-					ax = plt.gca()
-					ax.set_xlim([0, 15])
-					plt.legend()
+						#should we show interactive?
+						#plt.show()
 
-					#should we show interactive?
-					#plt.show()
+						#okay, actually save
+						if graph_dir:
+							graph_output_file = "{}/histogram-{}TWS-{}TWA.png".format(graph_dir, speed, angle)
+							plt.savefig(graph_output_file, bbox_inches='tight', dpi =600)
 
-					#okay, actually save
-					if graph_dir:
-						graph_output_file = "{}/histogram-{}TWS-{}TWA.png".format(graph_dir, speed, angle)
-						plt.savefig(graph_output_file, bbox_inches='tight', dpi =600)
-
-					plt.clf()
-					plt.close()
+						plt.clf()
+						plt.close()
 
 		#figure out our vmg
 		polars['vmg'] = polars['mean'].calculate_vmg()

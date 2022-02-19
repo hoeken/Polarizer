@@ -42,10 +42,10 @@ def main():
 	parser.add_argument('--filter', default='butter', help="What kind of filter to use. 'rolling' = Rolling average.  'butter' = Butterworth filter. 'none' = No Filter.")
 	parser.add_argument('--filter_seconds', default=10, type=int, help="How many seconds for the rolling filter. Default is 10s")
 	parser.add_argument('--filter_hz', default=0.10, type=float, help="What hz to use for the Butterworth filter.  Default is 0.1hz.  Lower is smoother")
-	#parser.add_argument('--twa_min', action='store', default = 0, type=float, help="Minimum TWA to generate polars for.")
-	#parser.add_argument('--twa_max', action='store', default = 180, type=float, help="Maximum TWA to generate polars for.")
-	#parser.add_argument('--tws_min', action='store', default = 0, type=float, help="Minimum TWS to generate polars for.")
-	#parser.add_argument('--tws_max', action='store', default = 35, type=float, help="Maximum TWS to generate polars for.")
+	parser.add_argument('--twa_min', action='store', default = 0, type=int, help="Minimum TWA to generate polars for, inclusive")
+	parser.add_argument('--twa_max', action='store', default = 180, type=int, help="Maximum TWA to generate polars for, inclusive.")
+	parser.add_argument('--tws_min', action='store', default = 0, type=int, help="Minimum TWS to generate polars for, inclusive")
+	parser.add_argument('--tws_max', action='store', default = 35, type=int, help="Maximum TWS to generate polars for, inclusive.")
 
 	args = parser.parse_args()
 	
@@ -372,6 +372,12 @@ def main():
 	#cruncho el numero
 	if args.graph:
 		graph_output_dir = None
+
+	#generate our polars now.
+	bp.twa_min = args.twa_min
+	bp.twa_max = args.twa_max
+	bp.tws_min = args.tws_min
+	bp.tws_max = args.tws_max
 	all_polars = bp.generate_polars(graph_output_dir, max_bsp)
 	
 	#lets make a polar chart!

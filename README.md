@@ -27,11 +27,11 @@ You can assign an arbitrary name to your particular sail configuration and it wi
 Afterwards, you can generate polars for each individual sail configuration and then combine them into a single 'best sailset' file.
 
 ~~~
-./generate-polars.py -d 'data/screacher and full main'
+./generate-polars.py -d 'data/screacher and full main' --tws_max=20 --twa_max=140
 ./generate-polars.py -d 'data/jib and full main'
 ./generate-polars.py -d 'data/jib and first reef'
-./generate-polars.py -d 'data/twin bow spin'
-./generate-polars.py -d 'data/bowsprit spin'
+./generate-polars.py -d 'data/twin bow spin' --twa_min=160
+./generate-polars.py -d 'data/bowsprit spin' 
 
 ./combine-polars.py -a 'screacher and full main' -b 'jib and full main' -c 'jib and first reef' -d 'twin bow spin' -e 'bowsprit spin'
 ~~~
