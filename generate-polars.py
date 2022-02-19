@@ -39,7 +39,9 @@ def main():
 	parser.add_argument('-p', '--polar', action='store', help='Sailset configuration name. Not needed if parsing a directory.')
 	parser.add_argument('-d', '--dir', action='store', help='Directory to parse.  Will use name of directory as sailset configuration name.')
 	parser.add_argument('-g', '--graph', default=False, action='store_true', help="Show interactive graph. Will always automatically generate .png graph images.")
-	parser.add_argument('--filter', default='butter', help="What kind of filter to use. 'rolling' = Rolling 10s average.  'butter' = Butterworth filter. 'none' = No Filter.")
+	parser.add_argument('--filter', default='butter', help="What kind of filter to use. 'rolling' = Rolling average.  'butter' = Butterworth filter. 'none' = No Filter.")
+	parser.add_argument('--filter_seconds', default=10, type=int, help="How many seconds for the rolling filter. Default is 10s")
+	parser.add_argument('--filter_hz', default=0.10, type=float, help="What hz to use for the Butterworth filter.  Default is 0.1hz.  Lower is smoother")
 	#parser.add_argument('--twa_min', action='store', default = 0, type=float, help="Minimum TWA to generate polars for.")
 	#parser.add_argument('--twa_max', action='store', default = 180, type=float, help="Maximum TWA to generate polars for.")
 	#parser.add_argument('--tws_min', action='store', default = 0, type=float, help="Minimum TWS to generate polars for.")
@@ -50,6 +52,8 @@ def main():
 	bp = boatpolar.BoatPolar()
 	files = []
 	polar_name = 'unknown'
+	
+	total_points = 0
 	
 	use_sog = False
 	
@@ -170,7 +174,6 @@ def main():
 						if 'water_speed' in output and nmea.sentence == 'VHW' and output['water_speed']:
 							bsp = float(output['water_speed'])
 							bsp_data.append({'time': pd_time, 'data': bsp})
-
 			else:
 				print ("Empty lines...")
 
@@ -193,43 +196,54 @@ def main():
 		#what was our max boat speed?
 		max_bsp = bsp_ds.max()
 
-		#do our rolling average
-		twa_rolling = twa_ds.rolling('10s', center=True).mean()
-		tws_rolling = tws_ds.rolling('10s', center=True).mean()
-		bsp_rolling = bsp_ds.rolling('10s', center=True).mean()
-
-		#do our butterworth filter
-		b = signal.butter(3, 0.10, analog=False)
-
-		fd = signal.filtfilt(*b, twa_ds.array, padtype='constant')
-		twa_butter = pd.Series(data=fd, index=twa_ds.index)
-
-		fd = signal.filtfilt(*b, tws_ds.array, padtype='constant')
-		tws_butter = pd.Series(data=fd,index=tws_ds.index)
-
-		fd = signal.filtfilt(*b, bsp_ds.array, padtype='constant')
-		bsp_butter = pd.Series(data=fd,index=bsp_ds.index)
-
 		#do we want a rolling 10s filter?
 		if args.filter == 'rolling':
+			#how many seconds to filter over?
+			seconds = args.filter_seconds
+
+			#do our rolling average
+			twa_rolling = twa_ds.rolling('{}s'.format(seconds), center=True).mean()
+			tws_rolling = tws_ds.rolling('{}s'.format(seconds), center=True).mean()
+			bsp_rolling = bsp_ds.rolling('{}s'.format(seconds), center=True).mean()
+
+			#save the result
 			twa_filt = twa_rolling
 			tws_filt = tws_rolling
 			bsp_filt = bsp_rolling
 		#do we want a buttery filter?
 		elif args.filter == 'butter':
+			#do our butterworth filter
+			hz = args.filter_hz
+			seconds = math.ceil(1 / hz)
+			b = signal.butter(3, hz, analog=False)
+
+			fd = signal.filtfilt(*b, twa_ds.array, padtype='constant')
+			twa_butter = pd.Series(data=fd, index=twa_ds.index)
+			fd = signal.filtfilt(*b, tws_ds.array, padtype='constant')
+			tws_butter = pd.Series(data=fd,index=tws_ds.index)
+			fd = signal.filtfilt(*b, bsp_ds.array, padtype='constant')
+			bsp_butter = pd.Series(data=fd,index=bsp_ds.index)
+
 			twa_filt = twa_butter
 			tws_filt = tws_butter
 			bsp_filt = bsp_butter
 		#or just the raw data?
 		else:
+			seconds = 0
+
 			twa_filt = twa_ds
 			tws_filt = tws_ds
 			bsp_filt = bsp_ds
 
 		#resample to give us regular data every second
-		twa_final = twa_filt.resample('1s').mean()
-		tws_final = tws_filt.resample('1s').mean()
-		bsp_final = bsp_filt.resample('1s').mean()
+		twa_resample = twa_filt.resample('1s').mean()
+		tws_resample = tws_filt.resample('1s').mean()
+		bsp_resample = bsp_filt.resample('1s').mean()
+		
+		#the start/end of the data is sketchy from averaging, extrapolation... drop it
+		twa_final = twa_resample[seconds:-seconds]
+		tws_final = tws_resample[seconds:-seconds]
+		bsp_final = bsp_resample[seconds:-seconds]
 
 		#print("Raw Data")
 		#print(bsp_ds)
@@ -258,8 +272,8 @@ def main():
 		# Graphs below
 		#
 				
-		scatter_size = 1
-		line_size = 0.5
+		scatter_size = 1.0
+		line_size = 1.0
 		
 		#reset our graph.
 		#plt.figure()
@@ -268,8 +282,8 @@ def main():
 
 		#plot our data
 		tws_ds.plot(ax=tws_ax, c='#00bf00', label='Raw', marker='.', markersize=scatter_size, linewidth=0, linestyle='None', markeredgewidth=0)
-		tws_rolling.plot(ax=tws_ax, c='orange', label='Rolling', linewidth=line_size)
-		tws_butter.plot(ax=tws_ax, c='purple', label='Filtered', linewidth=line_size)
+		#tws_rolling.plot(ax=tws_ax, c='orange', label='Rolling', linewidth=line_size)
+		#tws_butter.plot(ax=tws_ax, c='purple', label='Filtered', linewidth=line_size)
 		tws_final.plot(ax=tws_ax, c='black', label='Resampled', linewidth=line_size)
 
 		#show 0kts as base
@@ -287,8 +301,8 @@ def main():
 		
 		#plot our data
 		twa_ds.plot(ax=twa_ax, c='#bf0000', label='Raw', marker='.', markersize=scatter_size, linewidth=0, linestyle='None', markeredgewidth=0)
-		twa_rolling.plot(ax=twa_ax, c='orange', label='Rolling', linewidth=line_size)
-		twa_butter.plot(ax=twa_ax, c='purple', label='Filtered', linewidth=line_size)
+		#twa_rolling.plot(ax=twa_ax, c='orange', label='Rolling', linewidth=line_size)
+		#twa_butter.plot(ax=twa_ax, c='purple', label='Filtered', linewidth=line_size)
 		twa_final.plot(ax=twa_ax, c='black', label='Resampled', linewidth=line_size)
 
 		#show 0kts as base
@@ -306,8 +320,8 @@ def main():
 
 		#plot our data
 		bsp_ds.plot(ax=bsp_ax, c='#0000bf', label='Raw', marker='.', markersize=scatter_size, linewidth=0, linestyle='None', markeredgewidth=0)
-		bsp_rolling.plot(ax=bsp_ax, c='orange', label='Rolling', linewidth=line_size)
-		bsp_butter.plot(ax=bsp_ax, c='purple', label='Filtered', linewidth=line_size)
+		#bsp_rolling.plot(ax=bsp_ax, c='orange', label='Rolling', linewidth=line_size)
+		#bsp_butter.plot(ax=bsp_ax, c='purple', label='Filtered', linewidth=line_size)
 		bsp_final.plot(ax=bsp_ax, c='black', label='Resampled', linewidth=line_size)
 
 		#show 0kts as base
@@ -342,7 +356,10 @@ def main():
 		#okay, actually save
 		graph_output_file = "{}/data-{}.png".format(graph_output_dir, file_parts[1])
 		plt.savefig(graph_output_file, bbox_inches='tight', dpi=600)
-		print("Writing data graph to {}".format(graph_output_file))
+		print("Writing data graph to {}. {} points".format(graph_output_file, len(twa_pd)))
+
+		#how many points on this config?
+		total_points += len(twa_pd)
     
 		#do we want to show the interactive one?
 		if args.graph:
@@ -373,6 +390,8 @@ def main():
 		fname = "polars/{}-{}.csv".format(polar_name, idx)
 		print("Writing results to {}".format(fname))
 		polar.write_csv(fname)
+		
+	print("{} total data points processed.".format(total_points))
 
 if __name__ == '__main__':
 	main()

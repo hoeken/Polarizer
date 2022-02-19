@@ -4,6 +4,6 @@ TODO:
 * Verify that twa min/max is working properly.
 
 * Add AWA and AWS calculations
+* Add interpolation for TWS columns to predictwind script
 
-* write an interpolation utility script to change from one set of polar ranges to another
 * data entry on VPPs from dutoit
