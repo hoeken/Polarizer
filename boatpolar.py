@@ -60,8 +60,11 @@ class BoatPolar:
 		twa = int(twa)
 		tws = int(tws)
 		
-		if math.isnan(bsp):
-			bsp = 0
+		try:
+			if math.isnan(bsp):
+				bsp = 0
+		except Exception as e:
+			True
 
 		self.polar[tws][twa] = bsp
 
