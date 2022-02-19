@@ -17,6 +17,7 @@ __status__ = "Beta"
 import socket, time
 import pprint
 import datetime
+import tzlocal
 import json
 import argparse
 import os
@@ -70,6 +71,7 @@ def main():
 						jdata = {}
 						jdata['time'] = datetime.datetime.now().isoformat()
 						jdata['unix_time'] = time.time()
+						jdata['timezone'] = str(tzlocal.get_localzone())
 						jdata['lines'] = [line[0:-2]]
 						f.write(json.dumps(jdata) + "\n")
 						

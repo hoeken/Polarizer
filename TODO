@@ -1,7 +1,6 @@
 TODO:
 
 * figure out how to handle timezones so files can be trimmed easily
-* write script to convert all old files to timezone aware.
 * Create 'convert tabular polars' script too
 * Add AWA and AWS calculations
 
