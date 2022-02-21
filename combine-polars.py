@@ -94,14 +94,19 @@ def main():
 							legend.set_speed(twa, tws, key)
 							max_speed.set_speed(twa, tws, boat_speed)
 
-	#generate our vmg too
+	#generate our VMG too
 	best_vmg = max_speed.calculate_vmg()
+	best_vmg.write_csv("polars/combined-polars-vmg.csv")
+
+	#generate our AWA / AWS numbers
+	best_awa, best_aws = max_speed.calculate_apparent()
+	best_awa.write_csv("polars/combined-polars-awa.csv")	
+	best_aws.write_csv("polars/combined-polars-aws.csv")	
 							
 	#write our combined files
 	legend.write_csv("polars/combined-polars-sailset.csv")
 	max_speed.write_csv("polars/combined-polars-speed.csv")
 	max_speed.write_predictwind("polars/combined-polars-predictwind.txt")
-	best_vmg.write_csv("polars/combined-polars-vmg.csv")
 	
 	#show our max speed polars!
 	if args.name:

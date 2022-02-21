@@ -143,6 +143,43 @@ class BoatPolar:
 		
 		return vmg_polar
 
+	def calculate_apparent(self):
+		awa_polar = BoatPolar()
+		aws_polar = BoatPolar()
+
+		for tws in self.wind_speeds:
+			for twa in self.wind_angles:
+				bsp = self.get_speed(twa, tws)
+				
+				if bsp:
+
+					bsp_x = 0
+					bsp_y = bsp
+					true_x = tws * math.sin(math.radians(twa))
+					true_y = tws * math.cos(math.radians(twa))
+
+					app_x = bsp_x + true_x
+					app_y = bsp_y + true_y
+					
+					if twa == 0:
+						awa = 0
+					elif twa == 180:
+						awa = 180
+					else:
+						awa = 90 - math.degrees(math.atan(app_y / app_x))
+
+					aws = math.sqrt(app_x ** 2 + app_y ** 2)
+					
+					awa = round(awa, 2)
+					aws = round(aws, 2)
+					
+					#print("TWA: {} TWS: {} BSP: {} AWA: {} AWS: {}".format(twa, tws, bsp, awa, aws))
+
+					awa_polar.set_speed(twa, tws, awa)
+					aws_polar.set_speed(twa, tws, aws)
+		
+		return awa_polar, aws_polar
+
 
 	def generate_polars(self, graph_dir=None, max_bsp=15):
 		
@@ -208,6 +245,11 @@ class BoatPolar:
 
 		#figure out our vmg
 		polars['vmg'] = polars['mean'].calculate_vmg()
+
+		#apparent too		
+		awa_polar, aws_polar = polars['mean'].calculate_apparent()
+		polars['awa'] = awa_polar
+		polars['aws'] = aws_polar
 
 		return polars
 

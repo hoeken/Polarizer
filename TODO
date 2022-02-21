@@ -1,6 +1,6 @@
 TODO:
 
 * Create 'convert tabular polars' script too
-* Add AWA and AWS calculations
+* Add ability to filter on min/max awa and aws
 
 * data entry on VPPs from dutoit
