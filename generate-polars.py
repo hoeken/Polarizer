@@ -48,6 +48,10 @@ def main():
 	parser.add_argument('--twa_max', action='store', default = 180, type=int, help="Maximum TWA to generate polars for, inclusive.")
 	parser.add_argument('--tws_min', action='store', default = 0, type=int, help="Minimum TWS to generate polars for, inclusive")
 	parser.add_argument('--tws_max', action='store', default = 35, type=int, help="Maximum TWS to generate polars for, inclusive.")
+	parser.add_argument('--awa_min', action='store', default = 0, type=int, help="Minimum AWA to generate polars for, inclusive")
+	parser.add_argument('--awa_max', action='store', default = 180, type=int, help="Maximum AWA to generate polars for, inclusive.")
+	parser.add_argument('--aws_min', action='store', default = 0, type=int, help="Minimum AWS to generate polars for, inclusive")
+	parser.add_argument('--aws_max', action='store', default = 40, type=int, help="Maximum AWS to generate polars for, inclusive.")
 
 	args = parser.parse_args()
 	
@@ -119,7 +123,7 @@ def main():
 		local_tz = None
 
 		#open our file for reading
-		print("Parsing file {}".format(myfile))
+		print("Parsing '{}'".format(myfile))
 		fp = open(myfile)
 		while True:
 
@@ -379,11 +383,19 @@ def main():
 	if args.graph:
 		graph_output_dir = None
 
-	#generate our polars now.
+	#set our min/max on true wind
 	bp.twa_min = args.twa_min
 	bp.twa_max = args.twa_max
 	bp.tws_min = args.tws_min
 	bp.tws_max = args.tws_max
+
+	#set our min/max on apparent wind speed
+	bp.awa_min = args.awa_min
+	bp.awa_max = args.awa_max
+	bp.aws_min = args.aws_min
+	bp.aws_max = args.aws_max
+
+	#okay, do our generation
 	all_polars = bp.generate_polars(graph_output_dir, max_bsp)
 	
 	#lets make a polar chart!

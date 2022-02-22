@@ -37,6 +37,11 @@ class BoatPolar:
 	tws_min = 0
 	tws_max = 40
 
+	awa_min = 0
+	awa_max = 180
+	aws_min = 0
+	aws_max = 40
+
 	#VPP from DuToit...
 	#wind_angles = [40, 45, 52, 60, 70, 80, 90, 100, 110, 120, 135, 150, 160, 170, 180]
 	#wind_speeds = [4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 20, 25]
@@ -143,6 +148,30 @@ class BoatPolar:
 		
 		return vmg_polar
 
+	def calculate_single_apparent(self, twa, tws, bsp):
+		bsp_x = 0
+		bsp_y = bsp
+		true_x = tws * math.sin(math.radians(twa))
+		true_y = tws * math.cos(math.radians(twa))
+
+		app_x = bsp_x + true_x
+		app_y = bsp_y + true_y
+		
+		if twa == 0:
+			awa = 0
+		elif twa == 180:
+			awa = 180
+		else:
+			awa = 90 - math.degrees(math.atan(app_y / app_x))
+
+		aws = math.sqrt(app_x ** 2 + app_y ** 2)
+		
+		awa = round(awa, 1)
+		aws = round(aws, 1)
+		
+		return awa, aws
+
+
 	def calculate_apparent(self):
 		awa_polar = BoatPolar()
 		aws_polar = BoatPolar()
@@ -152,27 +181,7 @@ class BoatPolar:
 				bsp = self.get_speed(twa, tws)
 				
 				if bsp:
-
-					bsp_x = 0
-					bsp_y = bsp
-					true_x = tws * math.sin(math.radians(twa))
-					true_y = tws * math.cos(math.radians(twa))
-
-					app_x = bsp_x + true_x
-					app_y = bsp_y + true_y
-					
-					if twa == 0:
-						awa = 0
-					elif twa == 180:
-						awa = 180
-					else:
-						awa = 90 - math.degrees(math.atan(app_y / app_x))
-
-					aws = math.sqrt(app_x ** 2 + app_y ** 2)
-					
-					awa = round(awa, 1)
-					aws = round(aws, 1)
-					
+					awa, aws = self.calculate_single_apparent(twa, tws, bsp)
 					#print("TWA: {} TWS: {} BSP: {} AWA: {} AWS: {}".format(twa, tws, bsp, awa, aws))
 
 					awa_polar.set_speed(twa, tws, awa)
@@ -191,33 +200,53 @@ class BoatPolar:
 		#loop through twa/tws
 		for speed in self.wind_speeds:
 			for angle in self.wind_angles:
-				#filter here on twa/tws
-				if speed >= self.tws_min and speed <= self.tws_max and angle >= self.twa_min and angle <= self.twa_max:
 					#get our datapoints
 					mybin = self.bins[speed][angle]
+
+					#do we have enough?
 					if len(mybin) >= 50:
 
-						bin_stddev = round(numpy.std(self.bins[speed][angle]), 3)
-						bin_count = len(mybin)
+						#filter here on twa/tws
+						if speed < self.tws_min or speed > self.tws_max:
+							print("TWS LIMIT - TWA: {} TWS: {}".format(angle, speed))
+							continue
+						elif angle < self.twa_min or angle > self.twa_max:
+							print("TWA LIMIT - TWA: {} TWS: {}".format(angle, speed))
+							continue
+
+						#calculationes
 						bin_mean = round(numpy.average(self.bins[speed][angle]), 2)
+						bin_count = len(mybin)
 						bin_median = round(numpy.median(self.bins[speed][angle]), 2)
-						
-						#this is an attempt to filter out major outliers
+						bin_stddev = round(numpy.std(self.bins[speed][angle]), 3)
+
+						#run our average on +/- 1 standard deviation
 						filtered = []
 						for sog in self.bins[speed][angle]:
 							if sog >= bin_median - bin_stddev and sog <= bin_median + bin_stddev:
 								filtered.append(sog)
-						bin_filtered = round(numpy.average(filtered), 2)
-						bin_mean = bin_filtered
 						filtered_count = len(filtered)
+						bin_mean = round(numpy.average(filtered), 2)
+
+						#filter here on awa/aws
+						awa, aws = self.calculate_single_apparent(angle, speed, bin_mean)
+						if aws < self.aws_min or aws > self.aws_max:
+							print("AWS LIMIT - TWA: {} TWS: {} BSP: {} AWA: {} AWS: {}".format(angle, speed, bin_mean, awa, aws))
+							continue
+						elif awa < self.awa_min or awa > self.awa_max:
+							print("AWA LIMIT - TWA: {} TWS: {} BSP: {} AWA: {} AWS: {}".format(angle, speed, bin_mean, awa, aws))
+							continue
 
 						#record our results
 						polars['mean'].set_speed(angle, speed, bin_mean)
 						polars['count'].set_speed(angle, speed, bin_count)
 						polars['stddev'].set_speed(angle, speed, bin_stddev)
 						
-						#where do we graph it to?
-						#some lines
+						#
+						# Only Graph After Here
+						#
+
+						#std dev lines
 						plt.axvline(x=bin_mean, c='red', label="BSP ({})".format(bin_mean), linewidth=0.5, zorder=3, alpha = 0.5)
 						plt.axvspan(bin_mean-bin_stddev, bin_mean+bin_stddev, color='red', linewidth=0, alpha=0.1, zorder=3, label = '+/- 1 Sigma')
 
