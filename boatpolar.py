@@ -39,7 +39,7 @@ class BoatPolar:
 
 	#VPP from DuToit...
 	#wind_angles = [40, 45, 52, 60, 70, 80, 90, 100, 110, 120, 135, 150, 160, 170, 180]
-	#wind_speeds = [4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 20, 25, 30, 35, 40]
+	#wind_speeds = [4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 20, 25]
 
 	def __init__(self):
 		self.bins = {}
@@ -170,8 +170,8 @@ class BoatPolar:
 
 					aws = math.sqrt(app_x ** 2 + app_y ** 2)
 					
-					awa = round(awa, 2)
-					aws = round(aws, 2)
+					awa = round(awa, 1)
+					aws = round(aws, 1)
 					
 					#print("TWA: {} TWS: {} BSP: {} AWA: {} AWS: {}".format(twa, tws, bsp, awa, aws))
 

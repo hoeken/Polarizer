@@ -90,6 +90,12 @@ def main():
 	print("Writing polar to polars/predictwind-converted.csv")
 	output.calculate_vmg().write_csv("polars/predictwind-vmg.csv")
 	print("Writing vmg to polars/predictwind-vmg.csv")
+
+	best_awa, best_aws = output.calculate_apparent()
+	best_awa.write_csv("polars/predictwind-awa.csv")	
+	print("Writing awa to polars/predictwind-awa.csv")
+	best_aws.write_csv("polars/predictwind-aws.csv")	
+	print("Writing aws to polars/predictwind-aws.csv")
 	
 	print("Finished interpolating Predictwind polars")
 			

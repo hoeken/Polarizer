@@ -1,6 +1,5 @@
 TODO:
 
-* Create 'convert tabular polars' script too
 * Add ability to filter on min/max awa and aws
-
-* data entry on VPPs from dutoit
+* Add ability to use a leeway file to calculate vmg, awa, and aws
+* see if we can figure out leeway during polar generation
