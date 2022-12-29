@@ -132,6 +132,7 @@ def main():
 				if path == 'environment.wind.angleTrueWater':
 					twa = round(math.degrees(value))
 					print('TWA: {}'.format(twa))
+					
 		except KeyboardInterrupt:
 			print("Exiting.")
 		except Exception as e:

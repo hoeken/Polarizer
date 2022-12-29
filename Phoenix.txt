@@ -1,0 +1,17 @@
+Standard Sails
+
+./log-signalk.py -c 'jib and full main'
+./log-signalk.py -c 'jib and first reef'
+./log-signalk.py -c 'jib and second reef'
+./log-signalk.py -c 'screacher and full main'
+./log-signalk.py -c 'asym and full main'
+./log-signalk.py -c 'staysail and 3rd reef'
+./log-signalk.py -c 'jib only'
+./log-signalk.py -c 'staysail only'
+
+Funny Sails
+
+./log-signalk.py -c 'jib and staysail wing on wing'
+./log-signalk.py -c 'jib and screacher wing on wing'
+./log-signalk.py -c 'screacher and staysail and full main'
+
