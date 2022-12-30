@@ -137,8 +137,13 @@ def main():
 			except ValueError as e:
 				continue
 			
-			#did we get any data?
-			if data['lines'] is not None:
+			bsp = 0.0
+			sog = 0.0
+			twa = 0.0
+			tws = 0.0
+			
+			#What about NMEA0183 logs?
+			if 'lines' in data and data['lines'] is not None:
 				for line in data['lines']:
 
 					# run it through our parser
@@ -184,6 +189,31 @@ def main():
 						if 'water_speed' in output and nmea.sentence == 'VHW' and output['water_speed']:
 							bsp = float(output['water_speed'])
 							bsp_data.append({'time': pd_time, 'data': bsp})
+			#what about Signal K?
+			elif 'updates' in data and data['updates'] is not None:
+				for update in data['updates']:
+					
+					path = update['values'][0]['path']
+					value = float(update['values'][0]['value'])
+					pd_time = pd.to_datetime(update['timestamp'])
+
+					if use_sog:
+						if path == 'navigation.speedOverGround':
+							sog = round(value * 1.94384, 1)
+							bsp_data.append({'time': pd_time, 'data': bsp})
+					else:
+						if path == 'navigation.speedThroughWater':
+							bsp = round(value * 1.94384, 1)
+							bsp_data.append({'time': pd_time, 'data': bsp})
+
+					if path == 'environment.wind.speedTrue':
+						tws = round(value * 1.94384, 1)
+						tws_data.append({'time': pd_time, 'data': tws})
+
+					if path == 'environment.wind.angleTrueWater':
+						twa = round(math.degrees(value))
+						twa_data.append({'time': pd_time, 'data': twa})
+					
 			else:
 				print ("Empty lines...")
 
