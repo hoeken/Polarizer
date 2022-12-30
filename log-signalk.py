@@ -94,6 +94,11 @@ def main():
 
 	with open(fname, 'w') as f:
 		try:
+			sog = 0
+			bsp = 0
+			twa = 0
+			tws = 0
+			
 			#log forever
 			while True:
 			
@@ -103,13 +108,7 @@ def main():
 				#pprint(output)
 			
 				#write our line to our file...
-				jdata = {}
-				jdata['time'] = datetime.datetime.now().isoformat()
-				jdata['unix_time'] = time.time()
-				jdata['timezone'] = str(tzlocal.get_localzone())
-				jdata['source'] = 'signalk'
-				jdata['lines'] = line
-				f.write(json.dumps(jdata) + "\n")
+				f.write(json.dumps(output) + "\n")
 			
 				path = output['updates'][0]['values'][0]['path']
 				value = float(output['updates'][0]['values'][0]['value'])
@@ -122,16 +121,14 @@ def main():
 				
 				if path == 'navigation.speedOverGround':
 					sog = round(value * 1.94384, 1)
-					print('SOG: {}'.format(sog))
 				if path == 'navigation.speedThroughWater':
 					bsp = round(value * 1.94384, 1)
-					print('BSP: {}'.format(bsp))
 				if path == 'environment.wind.speedTrue':
 					tws = round(value * 1.94384, 1)
-					print('TWS: {}'.format(tws))
 				if path == 'environment.wind.angleTrueWater':
 					twa = round(math.degrees(value))
-					print('TWA: {}'.format(twa))
+				
+				print('SOG: {} BSP: {} TWS: {} TWA: {}'.format(sog, bsp, tws, twa))
 					
 		except KeyboardInterrupt:
 			print("Exiting.")
